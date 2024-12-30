@@ -1,0 +1,23 @@
+{
+  "name": "nyc_camera_violations",
+  "version": "1.0.0",
+  "description": "nyc speed camera violators",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m-cahana/nyc_camera_violations.git"
+  },
+  "author": "Michael Cahana",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/m-cahana/nyc_camera_violations/issues"
+  },
+  "homepage": "https://github.com/m-cahana/nyc_camera_violations#readme",
+  "dependencies": {
+    "d3": "^7.9.0",
+    "d3-ease": "^3.0.1"
+  }
+}

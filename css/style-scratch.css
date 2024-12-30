@@ -1,0 +1,86 @@
+body {
+  max-width: 900px;
+  margin: 0px auto;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h1 {
+  margin: 50px;
+}
+
+h1 {
+  text-align: center;
+}
+
+#container {
+  position: relative;
+}
+
+#sections {
+  width: 340px;
+}
+
+#sections > div {
+  background: white;
+  opacity: 0.2;
+  margin-bottom: 200px;
+}
+
+#sections > div:last-child {
+  margin-bottom: 30px;
+}
+
+#sections > div.graph-scroll-active {
+  opacity: 1;
+}
+
+#graph {
+  margin-left: 40px;
+  width: 500px;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0px;
+  float: right;
+}
+
+@media (max-width: 925px) {
+  #graph {
+    width: 100%;
+    margin-left: 0px;
+    float: none;
+  }
+
+  #sections {
+    width: auto;
+    position: relative;
+    margin: 0px auto;
+  }
+
+  #sections > div {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 10px;
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    margin-bottom: 80vh;
+  }
+
+  pre {
+    overflow: hidden;
+  }
+
+  h1 {
+    margin: 10px;
+  }
+}
+
+circle {
+  fill: steelblue;
+}
+
+.mono {
+  font-family: monospace;
+}
+
+svg {
+  background-color: #eee;
+}
