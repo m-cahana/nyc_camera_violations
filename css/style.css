@@ -7,6 +7,16 @@ body {
   overflow-x: hidden;
 }
 
+#fullpage-header {
+  position: relative;
+  width: 100%;
+  height: 100vh; /* Full viewport height */
+  background-color: #f0f0f0; /* Adjust as needed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 #sections {
   position: relative;
   display: inline-block;
@@ -83,6 +93,29 @@ strong {
   z-index: 100;
 }
 
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1; /* Base layer */
+}
+
+#map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 800px;
+  height: 500px;
+  display: none; /* Hidden by default */
+  z-index: 2; /* Above SVG */
+}
+
+#map {
+  width: 80%;
+  height: 100%;
+  margin-left: auto;
+}
+
 svg circle:hover {
   cursor: pointer;
 }
@@ -102,4 +135,14 @@ a {
 
 img {
   display: none;
+}
+
+/* Class to hide elements */
+.hidden {
+  display: none;
+}
+
+#selectButton {
+  position: relative;
+  z-index: 2;
 }

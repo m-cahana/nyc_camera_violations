@@ -8,23 +8,33 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-ease@3"></script>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v3.9.2/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.2/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
   </head>
 
   <body>
+   
     <div id="graphic">
-      <div id="sections">
-        <section class="step">
-          <div class="title">NYC SPEED</div>
-          Here we go
-        </section>
-        <section class="step">Blah blah blahhhhh</section>
-        <section class="step">Blah blah blahhhhh</section>
-        <section class="step">Blah blah blahhhhh</section>
-        <section class="step">Blah blah blahhhhh</section>
-        <section class="step">Blah blah blahhhhh</section>
+      <main id="main-content">
+        <div id="sections">
+          <section class="step">
+            <div class="title">NYC SPEED</div>
+            Here we go pie chart first?
+          </section>
+          <section class="step">Blah blah blahhhhh</section>
+          <section class="step">Blah blah blahhhhh</section>
+          <section class="step">Map!</section>
+        </div>
+        <div id="vis">
+          <!-- hide initially -->
+          <select id="selectButton" class="hidden"></select>
+        </div>
       </div>
-      <div id="vis"></div>
-    </div>
+    </main>
 
     <script src="js/scroller.js"></script>
     <script src="js/sections.js"></script>
