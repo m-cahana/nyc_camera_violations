@@ -1,11 +1,13 @@
-let histDataset, mapDataset, mapPlates, svg, g, plates;
+let histDataset, mapDataset, mapPlates;
+let svg, g;
+let plates, selectedPlateDates;
 let cumXScale, cumYScale;
 let xAxis, yAxis;
 let simulation;
 let selectedPlateID = null;
 let map; // Global map instance
 
-const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 20, BOTTOM: 20 };
+const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
 const WIDTH = 800;
 const HEIGHT = 500;
 
@@ -32,10 +34,21 @@ d3.csv("data/processed/repeat_offenders_lat_long_sample.csv").then((data) => {
   data.forEach((d) => {
     d.lat = Number(d.lat);
     d.long = Number(d.long);
+    d.issue_dt = new Date(d.issue_dt);
   });
 
   mapDataset = data.filter((d) => d.lat != 0 && d.long != 0);
   mapPlates = [...new Set(data.map((d) => d.plate_id))];
+
+  mapDateMax = [...data.map((d) => d.issue_dt)].reduce(function (a, b) {
+    return a > b ? a : b;
+  });
+  mapDateMin = [...data.map((d) => d.issue_dt)].reduce(function (a, b) {
+    return a < b ? a : b;
+  });
+
+  // Sort the dataset by date for efficient processing
+  mapDataset.sort((a, b) => a.issue_dt - b.issue_dt);
 });
 
 // All the initial elements should be created in the drawInitial function
@@ -87,14 +100,14 @@ function drawInitial() {
     .attr("class", "x-axis")
     .attr("transform", `translate(0,${HEIGHT - MARGIN.BOTTOM})`);
 
-  xAxis.call(d3.axisBottom(cumXScale));
+  xAxis.call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
 
   yAxis = svg
     .append("g")
     .attr("class", "y-axis")
     .attr("transform", `translate(${MARGIN.LEFT},0)`);
 
-  yAxis.call(d3.axisLeft(cumYScale));
+  yAxis.call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
 
   // Instantiate the force simulation
   simulation = d3.forceSimulation(histDataset);
@@ -115,7 +128,7 @@ function drawInitial() {
     .style("padding", "5px")
     .style("border-radius", "5px")
     .style("box-shadow", "0px 2px 5px rgba(0, 0, 0, 0.3)")
-    .style("pointer-events", "none")
+    .style("pointer-events", "all")
     .style("opacity", 0); // Initially hidden
 
   // Create nodes
@@ -183,14 +196,38 @@ function drawInitial() {
     .attr("width", WIDTH)
     .attr("height", HEIGHT)
     .attr("x", 0)
-    .attr("y", 0)
+    .attr("y", MARGIN.TOP)
     .attr("class", "map-foreignobject")
     .style("display", "none") // Hidden by default
     .append("xhtml:div")
     .attr("id", "map"); // This div will host the Mapbox map
 
-  // add the options to the button
-  d3.select("#selectButton")
+  mapContainer = d3.select("#map");
+
+  mapContainer
+    .append("div")
+    .attr("id", "date-display")
+    .style("position", "absolute");
+
+  const selectWrapper = mapContainer.append("div").attr("id", "select-wrapper");
+
+  // Append a label for the selectButton
+  selectWrapper
+    .append("label")
+    .attr("for", "selectButton")
+    .text("Plate ID: ")
+    .style("margin-right", "5px")
+    .style("font-size", "14px")
+    .style("color", "#333");
+
+  // Append the select element to the wrapper
+  const selectButton = selectWrapper
+    .append("select")
+    .attr("id", "selectButton")
+    .style("width", "200px"); // Adjust width as needed
+
+  // Add options to the selectButton
+  selectButton
     .selectAll("option")
     .data(mapPlates)
     .enter()
@@ -201,21 +238,79 @@ function drawInitial() {
   // dropdown will be initialized to first element
   selectedPlateID = mapPlates[0];
 
-  // When the button is changed, run the updateChart function
-  d3.select("#selectButton").on("change", function (d) {
-    // recover the option that has been chosen
-    selectedPlateID = d3.select(this).property("value");
-    // Apply filter to show only points with the selected plate_id
-    map.setFilter("filtered-points-layer", [
-      "==",
-      ["get", "plate_id"],
-      selectedPlateID,
-    ]);
+  const imageGroup = svg
+    .append("g")
+    .attr("class", "image-group") // Assign a class for easy selection
+    .style("opacity", 0) // Initially hidden
+    .style("pointer-events", "none");
 
-    adjustMapBounds(selectedPlateID);
+  // Embed the PNG image within the group
+  imageGroup
+    .append("image")
+    .attr("href", "images/crash-car-1.png") // Replace with your PNG path
+    .attr("x", WIDTH / 2 - 50) // Adjust x position
+    .attr("y", HEIGHT / 4) // Adjust y position
+    .attr("width", 300) // Adjust width
+    .attr("height", 300) // Adjust height
+    .attr("class", "embedded-image") // Assign a class for styling
+    // Initial rotation set to 0 degrees
+    .attr("transform", `rotate(0, ${WIDTH / 2}, ${HEIGHT / 2})`);
 
-    console.log(selectedPlateID);
-  });
+  // Append the caption text beneath the image within the same group
+  imageGroup
+    .append("foreignObject")
+    .attr("x", WIDTH / 2 + 100 - 100) // Adjust x as needed
+    .attr("y", HEIGHT / 4 + 300 - 30) // Adjust y as needed
+    .attr("width", 200) // Adjust width as needed
+    .attr("height", 50) // Adjust height as needed
+    .style("pointer-events", "none") // Ensure it doesn't capture mouse events
+    .append("xhtml:div") // Must use XHTML namespace
+    .style("text-align", "center") // Center text
+    .style("font-size", "12px")
+    .style("color", "black")
+    .html(
+      "<span>Repeat offender crash in 2021</span><br/><span>Photo by Liam Quiqley</span>"
+    );
+}
+
+function showImage() {
+  cleanHist();
+  hideMap();
+  d3.select(".embedded-image").transition().duration(500).style("opacity", 1);
+}
+
+// Function to show and rotate the image group
+function showImage() {
+  const imageGroup = d3.select(".image-group");
+
+  imageGroup
+    .transition()
+    .duration(500) // Duration of the transition in milliseconds
+    .style("opacity", 1) // Fade in the group
+    .attrTween("transform", function () {
+      const cx = WIDTH / 2;
+      const cy = HEIGHT / 2;
+      // Interpolate rotation from 0 to 30 degrees around the center
+      return d3.interpolateString(
+        `rotate(0, ${cx}, ${cy})`,
+        `rotate(30, ${cx}, ${cy})`
+      );
+    });
+}
+
+// Function to hide and reset the image group
+function hideImage() {
+  const imageGroup = d3.select(".image-group");
+
+  imageGroup
+    .transition()
+    .duration(500) // Duration of the transition in milliseconds
+    .style("opacity", 0) // Fade out the group
+    .attr("transform", `rotate(0, ${WIDTH / 2}, ${HEIGHT / 2})`); // Reset rotation
+}
+
+function hideMap() {
+  svg.select(".map-foreignobject").style("display", "none");
 }
 
 function regenerateAxes(data, nodes) {
@@ -230,8 +325,14 @@ function regenerateAxes(data, nodes) {
   cumXScale.domain([minRowPct, maxRowPct]);
   cumYScale.domain([minCumShare, maxCumShare]);
 
-  xAxis.transition().duration(500).call(d3.axisBottom(cumXScale));
-  yAxis.transition().duration(500).call(d3.axisLeft(cumYScale));
+  xAxis
+    .transition()
+    .duration(500)
+    .call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
+  yAxis
+    .transition()
+    .duration(500)
+    .call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
 }
 
 function drawHist(xLower = 0, xHigher = 100) {
@@ -245,10 +346,6 @@ function drawHist(xLower = 0, xHigher = 100) {
 
   svg.selectAll(".nodes").style("display", "block");
 
-  // remove map...
-  svg.select(".map-foreignobject").style("display", "none");
-  d3.select("#selectButton").classed("hidden", true);
-
   // Filter the histDataset to include only a subset of nodes
   const limitedData = histDataset.filter((d) => {
     return d.row_pct >= xLower && d.row_pct <= xHigher;
@@ -258,7 +355,7 @@ function drawHist(xLower = 0, xHigher = 100) {
   regenerateAxes(limitedData);
 
   // Bind all existing nodes to the full histDataset (don't remove any nodes)
-  const nodes = svg.selectAll(".nodes").data(histDataset, (d) => d.plate_id);
+  const nodes = svg.selectAll(".nodes").data(histDataset);
 
   // Update all nodes
   nodes
@@ -288,48 +385,25 @@ function cleanHist() {
   svg.selectAll(".nodes").style("display", "none");
 }
 
-function adjustMapBounds(selectedPlateID) {
-  // Retrieve the GeoJSON data from the source
-  const sourceData = map.getSource("filtered-points")._data;
-
-  const filteredPoints = sourceData.features.filter(
-    (feature) => feature.properties.plate_id === selectedPlateID
-  );
-
-  // Extract all coordinates of the filtered points
-  const coordinates = filteredPoints.map(
-    (feature) => feature.geometry.coordinates
-  );
-
-  // Calculate the bounding box
-  const bounds = new mapboxgl.LngLatBounds();
-
-  coordinates.forEach((coord) => {
-    bounds.extend(coord);
-  });
-
-  // Fit the map to the calculated bounds with padding
-  map.fitBounds(bounds, {
-    padding: 50, // Adjust padding as needed
-    maxZoom: 14, // Optional: Limit maximum zoom to prevent over-zooming
-    duration: 1000, // Duration in milliseconds for the animation
-    essential: true, // This ensures the animation is not affected by user preferences
-  });
-}
-
 // Function to draw the Mapbox map (as defined earlier)
 
 // Insert the drawMapbox function here or in another script tag
 // For clarity, include it here again:
 
 function drawMapbox() {
-  cleanHist();
   // Show the foreignObject containing the map
   d3.select(".map-foreignobject").style("display", "block");
-  d3.select("#selectButton").classed("hidden", false);
 
   // Ensure the SVG remains visible
   d3.select("svg").style("opacity", 1);
+
+  selectButton = d3.select("#map").select("#selectButton");
+
+  // Event listener for selectButton
+  selectButton.on("change", function () {
+    selectedPlateID = d3.select(this).property("value");
+    adjustMapBounds(selectedPlateID);
+  });
 
   // Initialize the Mapbox map
   mapboxgl.accessToken =
@@ -354,9 +428,40 @@ function drawMapbox() {
       properties: {
         date: point.issue_dt,
         plate_id: point.plate_id,
+        issue_dt_ts: point.issue_dt, // Add timestamp for filtering
       },
     })),
   };
+
+  function adjustMapBounds(selectedPlateID) {
+    // Retrieve the GeoJSON data from the source
+    const sourceData = map.getSource("filtered-points")._data;
+
+    const filteredPoints = sourceData.features.filter(
+      (feature) => feature.properties.plate_id === selectedPlateID
+    );
+
+    // Extract all coordinates of the filtered points
+    const coordinates = filteredPoints.map(
+      (feature) => feature.geometry.coordinates
+    );
+
+    // Calculate the bounding box
+    const bounds = new mapboxgl.LngLatBounds();
+
+    coordinates.forEach((coord) => {
+      bounds.extend(coord);
+    });
+
+    // Fit the map to the calculated bounds with padding
+    map.fitBounds(bounds, {
+      padding: 100, // Adjust padding as needed
+      duration: 1000, // Duration in milliseconds for the animation
+      essential: true, // This ensures the animation is not affected by user preferences
+    });
+
+    AnimationController.start();
+  }
 
   // Function to load borough boundaries
   async function loadBoroughs() {
@@ -388,6 +493,101 @@ function drawMapbox() {
     return filtered;
   }
 
+  // Animation Controller Object
+  const AnimationController = (function () {
+    let currentIndex = 0;
+    let isPaused = false;
+    let timeoutId = null;
+
+    // Define speeds
+    const animationSpeed = 100; // 100 ms per date
+
+    // Function to add a point and update the map
+    function addPoints(currentDate) {
+      const formattedDate = currentDate.toISOString().split("T")[0];
+
+      map.setFilter("filtered-points-layer", [
+        "all",
+        ["==", ["get", "plate_id"], selectedPlateID],
+        ["<=", ["get", "issue_dt_ts"], formattedDate],
+      ]);
+
+      // Query features that match the current date and selectedPlateID
+      const matchingFeatures = map.querySourceFeatures("filtered-points", {
+        filter: [
+          "all",
+          ["==", ["get", "plate_id"], selectedPlateID],
+          ["==", ["get", "issue_dt_ts"], formattedDate],
+        ],
+      });
+
+      // Highlight each matching feature
+      matchingFeatures.forEach((feature) => {
+        map.setFeatureState({ source: "filtered-points" }, { highlight: true });
+      });
+
+      // After a delay, remove the highlight to transition back to normal size
+      setTimeout(() => {
+        matchingFeatures.forEach((feature) => {
+          map.setFeatureState(
+            { source: "filtered-points" },
+            { highlight: false }
+          );
+        });
+      }, 1000); // Match this duration to 'circle-radius-transition.duration'
+
+      d3.select("#map").select("#date-display").text(`Date: ${formattedDate}`);
+    }
+
+    // Function to iterate through all dates
+    function iterateDates() {
+      if (currentIndex >= selectedPlateDates.length) {
+        // Stop the animation when all dates have been processed
+        return;
+      }
+
+      const currentDate = selectedPlateDates[currentIndex];
+      const formattedDate = currentDate.toISOString().split("T")[0];
+
+      // Add points if any
+      addPoints(currentDate);
+      currentIndex++;
+
+      // Schedule the next iteration
+      timeoutId = setTimeout(() => {
+        if (!isPaused) {
+          iterateDates();
+        }
+      }, animationSpeed);
+    }
+
+    // Public methods
+    return {
+      start: function () {
+        selectedPlateDates = [
+          ...mapDataset
+            .filter((d) => d.plate_id == selectedPlateID)
+            .map((d) => d.issue_dt),
+        ];
+
+        currentIndex = 0;
+        iterateDates(selectedPlateDates);
+      },
+      pause: function () {
+        isPaused = true;
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+      },
+      resume: function () {
+        if (!isPaused) return;
+        isPaused = false;
+        iterateDates();
+      },
+    };
+  })();
+
   // Add source and layer for points when the map loads
   map.on("load", async () => {
     // Load borough boundaries
@@ -413,9 +613,19 @@ function drawMapbox() {
       type: "circle",
       source: "filtered-points",
       paint: {
-        "circle-radius": 6,
+        "circle-radius": [
+          "case",
+          ["boolean", ["feature-state", "highlight"], false],
+          12, // Radius when highlighted
+          6, // Normal radius
+        ],
         "circle-color": "#007cbf",
         "circle-opacity": 0.8,
+        "circle-radius-transition": {
+          duration: 1000, // Transition duration in milliseconds
+          delay: 0,
+          type: "linear",
+        },
       },
     });
 
@@ -440,7 +650,7 @@ function drawMapbox() {
       // Customize this based on the properties you have
       const popupContent = `
         <div style="font-size: 12px;">
-          <strong>Date:</strong> ${props.date}<br/>
+          <strong>Date:</strong> ${new Date(props.date).toDateString()}<br/>
         </div>
       `;
 
@@ -468,6 +678,9 @@ function drawMapbox() {
     ]);
 
     adjustMapBounds(selectedPlateID);
+
+    // Start the animation
+    // AnimationController.start();
   });
 
   // Add navigation controls (optional)
@@ -478,10 +691,28 @@ function drawMapbox() {
 // Will be called from the scroller functionality
 
 let activationFunctions = [
-  drawHist,
-  () => drawHist(50, 100),
-  () => drawHist(95, 100),
-  drawMapbox, // Newly added Mapbox function
+  () => {
+    drawHist();
+    hideMap();
+  },
+  () => {
+    drawHist(50, 100);
+    hideMap();
+  },
+  () => {
+    drawHist(95, 100);
+    hideImage();
+    hideMap();
+  },
+  () => {
+    showImage();
+    cleanHist();
+    hideMap();
+  },
+  () => {
+    drawMapbox();
+    hideImage();
+  }, // Newly added Mapbox function
 ];
 
 // All the scrolling functions
