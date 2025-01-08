@@ -44,4 +44,6 @@ all_chunks = all_chunks.merge(violation_codes, how = 'left', on = 'violation_cod
 
 # ----- save output -----
 
-all_chunks.to_csv('../processed/parking_violations_agg_copy.csv', index = Fals
+all_chunks.to_csv('../processed/parking_violations_agg_copy.csv', index = False)
+
+

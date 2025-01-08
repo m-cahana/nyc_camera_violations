@@ -8,8 +8,8 @@ let selectedPlateID = null;
 let map; // Global map instance
 
 const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
-const WIDTH = 800;
-const HEIGHT = 500;
+let WIDTH = 800;
+let HEIGHT = 500;
 
 const DOT = { RADIUS: 5, OPACITY: 0.2 };
 
@@ -50,6 +50,67 @@ d3.csv("data/processed/repeat_offenders_lat_long_sample.csv").then((data) => {
   // Sort the dataset by date for efficient processing
   mapDataset.sort((a, b) => a.issue_dt - b.issue_dt);
 });
+
+// Function to update dimensions based on container size
+function updateDimensions() {
+  const container = document.getElementById("vis");
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+
+  WIDTH = containerWidth - MARGIN.LEFT - MARGIN.RIGHT;
+  HEIGHT = containerHeight - MARGIN.TOP - MARGIN.BOTTOM;
+
+  // Update scales
+  cumXScale.range([0, WIDTH]);
+  cumYScale.range([HEIGHT, 0]);
+
+  if (xAxis) {
+    xAxis
+      .attr("transform", `translate(0,${HEIGHT})`)
+      .call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
+  }
+
+  if (yAxis) {
+    yAxis.call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
+  }
+
+  // Update SVG size
+  svg.attr(
+    "viewBox",
+    `0 0 ${WIDTH + MARGIN.LEFT + MARGIN.RIGHT} ${
+      HEIGHT + MARGIN.TOP + MARGIN.BOTTOM
+    }`
+  );
+
+  // Update labels positions
+  svg
+    .select(".x-label")
+    .attr("y", HEIGHT + MARGIN.BOTTOM - 10)
+    .attr("x", WIDTH / 2);
+
+  svg
+    .select(".y-label")
+    .attr("x", -HEIGHT / 2)
+    .attr("y", -MARGIN.LEFT + 20);
+
+  // Update nodes positions
+  svg
+    .selectAll(".nodes")
+    .attr("cx", (d) => cumXScale(d.row_pct))
+    .attr("cy", (d) => cumYScale(d.cum_share));
+
+  // Update image positions if necessary
+  svg
+    .select(".embedded-image")
+    .attr("x", WIDTH / 2 - 50)
+    .attr("y", HEIGHT / 4)
+    .attr("transform", `rotate(0, ${WIDTH / 2}, ${HEIGHT / 2})`);
+
+  svg
+    .select(".image-group foreignObject")
+    .attr("x", WIDTH / 2 - 100)
+    .attr("y", HEIGHT / 4 + 270);
+}
 
 // All the initial elements should be created in the drawInitial function
 // As they are required, their attributes can be modified
@@ -271,6 +332,11 @@ function drawInitial() {
     .html(
       "<span>Repeat offender crash in 2021</span><br/><span>Photo by Liam Quiqley</span>"
     );
+
+  // Add window resize listener
+  window.addEventListener("resize", () => {
+    // updateDimensions();
+  });
 }
 
 function showImage() {

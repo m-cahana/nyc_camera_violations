@@ -32,6 +32,8 @@ function scroller() {
       }
       sectionPositions.push(top - startPos);
     });
+
+    console.log(sectionPositions);
   }
 
   function position() {
@@ -40,6 +42,8 @@ function scroller() {
     sectionIndex = Math.min(sections.size() - 1, sectionIndex);
 
     if (currentIndex !== sectionIndex) {
+      console.log(`pos: ${pos}`);
+      console.log(`index: ${currentIndex}`);
       dispatch.call("active", this, sectionIndex);
       currentIndex = sectionIndex;
     }
