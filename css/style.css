@@ -8,48 +8,56 @@ body {
   overflow-x: hidden;
 }
 
-#main-content {
+/* #main-content {
   display: flex;
   flex-direction: column;
-}
-
-/* #graphic {
-  margin: auto;
-  width: 1500px;
-  flex-direction: row;
-  align-items: top;
-  justify-content: space-around;
 } */
+
+#footer {
+  border-top: solid;
+}
 
 #graphic {
   display: flex;
-  flex-direction: row; /* Side by side on large screens */
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: top;
   justify-content: space-around;
+  width: 1000px;
   padding: 20px;
   max-width: 100%;
   margin: 0 auto;
 }
 
 #sections {
-  flex: 1;
-  max-width: 400px;
   position: relative;
-  z-index: 0;
-  display: flex;
+  display: inline-block;
   flex-direction: column;
+  width: 250px;
+  top: 60px;
+  z-index: 90;
+  margin-right: 50px;
+}
+
+#vis-container {
+  position: relative; /* Positioned ancestor for absolute positioning */
+  /* Ensure the container spans the full viewport height if needed */
+  min-height: 93vh;
 }
 
 #vis {
-  display: inline-block;
+  display: block;
   position: fixed;
-  top: 0px;
   z-index: 1;
-  margin-left: 0;
-  height: 1000px;
+  height: auto;
   width: 100%;
   max-width: 1000px;
   flex: 2;
+  margin-left: 200px;
+  top: 0px;
+}
+/* static class */
+#vis.static {
+  position: absolute;
 }
 
 .categoryLegend {
@@ -58,59 +66,37 @@ body {
 
 .step {
   margin-bottom: 100px;
-  min-height: 300px;
+  min-height: 700px;
   font-family: "Domine";
   font-weight: 400;
   line-height: 1.4em;
   text-align: justify;
-  border-style: solid;
   max-width: 700px;
   z-index: 101;
   position: relative;
   width: 90%; /* Adjust as needed */
-  /* display: flex;
-    flex-direction: column;
-    justify-content: space-around; */
-}
-
-h1,
-h2 {
-  font-weight: 700;
-  text-align: right;
-  line-height: 32px;
-}
-
-h1 {
-  font-size: 35px;
-}
-
-strong {
-  color: rgb(245, 155, 155);
 }
 
 .tick line {
   stroke: "red";
 }
 
-#tooltip {
+.tooltip {
   position: absolute;
-  display: none;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 3px;
-  box-shadow: -3px 3px 15px #939393;
-  color: white;
-  padding: 6px;
-  font-family: "Merriweather";
-  font-size: 1.1em;
-  max-width: 400px;
-  z-index: 100;
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+  pointer-events: all;
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.3s ease; /* Smooth fade-in and fade-out */
+  z-index: 1000; /* Ensure tooltip appears above other elements */
 }
 
-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1; /* Base layer */
+/* Tooltip Visible State */
+.tooltip.visible {
+  opacity: 1;
 }
 
 #map-container {
@@ -124,7 +110,7 @@ svg {
 }
 
 #map {
-  width: 80%;
+  width: 100%;
   height: 100%;
   margin-left: auto;
 }
@@ -133,31 +119,9 @@ svg circle:hover {
   cursor: pointer;
 }
 
-.swatch {
-  fill: #939393;
-}
-
-.sizeLegend2 {
-  opacity: 0.7;
-}
-
-a {
-  color: rgb(221, 0, 255);
-  text-decoration: none;
-}
-
-img {
-  display: none;
-}
-
 /* Class to hide elements */
 .hidden {
   display: none;
-}
-
-#selectButton {
-  position: relative;
-  z-index: 2;
 }
 
 #date-display {
@@ -194,6 +158,8 @@ img {
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
+  position: relative;
+  z-index: 2;
 }
 
 /* Hover effect for selectButton */
@@ -203,45 +169,66 @@ img {
 
 /* Responsive Adjustments */
 @media screen and (min-width: 1100px) {
-  #graphic {
-    width: 1000px;
-    flex-direction: column;
-    align-items: top;
-    justify-content: space-around;
-  }
-
   #vis {
-    display: inline-block;
-    position: fixed;
     top: 0px;
     z-index: 1;
     margin-left: 200px;
-    height: 1000px;
-    width: 1000px;
-  }
-
-  #sections {
-    position: relative;
-    display: inline-block;
-    flex-direction: column;
-    width: 250px;
-    top: 60px;
-    z-index: 90;
-    margin-right: 50px;
-  }
-
-  .step {
-    border-style: none;
   }
 }
 
+/* smaller screens */
 @media screen and (max-width: 1099px) {
-  #sections {
-    width: 100%; /* Use full width */
+  .step {
+    width: 90%; /* Slightly less than 100% for margins */
+    max-width: 700px; /* Maintain a max-width for better readability */
+    margin: 20px auto; /* Center horizontally and add vertical spacing */
+    text-align: center; /* Center the text content */
+    border-style: solid;
+    margin-bottom: 500px;
   }
 
-  .step {
-    width: 100%; /* Use full width */
-    margin-bottom: 500px;
+  #graphic {
+    display: flex;
+    flex-direction: column; /* Side by side on large screens */
+    align-items: center;
+  }
+
+  #sections {
+    flex: 1;
+    max-width: 400px;
+    z-index: 0;
+    width: 100%;
+  }
+
+  #vis-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #vis {
+    margin-left: 0; /* Remove left margin */
+    left: 50%; /* Position left edge at 50% of viewport width */
+    transform: translateX(-50%); /* Shift left by 50% of #vis's width */
+    width: 90%; /* Adjust width for better fit on small screens */
+    max-width: 800px; /* Optional: Set a smaller max-width */
+  }
+
+  #map-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Style for the map foreignObject */
+  .map-foreignobject {
+    display: flex;
+    justify-content: center; /* Center the #map div horizontally within foreignObject */
+    align-items: center; /* Center the #map div vertically within foreignObject */
+  }
+
+  .image-group {
+    justify-content: center; /* Centers items horizontally */
+    width: 100%; /* Ensures it takes full width of its container */
   }
 }

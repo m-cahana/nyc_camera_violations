@@ -1,5 +1,6 @@
 let histDataset, mapDataset, mapPlates;
 let svg, g;
+let xLabel, yLabel;
 let plates, selectedPlateDates;
 let cumXScale, cumYScale;
 let xAxis, yAxis;
@@ -10,6 +11,8 @@ let map; // Global map instance
 const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
 let WIDTH = 800;
 let HEIGHT = 500;
+
+let HEIGHT_WIDTH_RATIO = HEIGHT / WIDTH;
 
 const DOT = { RADIUS: 5, OPACITY: 0.2 };
 
@@ -51,49 +54,53 @@ d3.csv("data/processed/repeat_offenders_lat_long_sample.csv").then((data) => {
   mapDataset.sort((a, b) => a.issue_dt - b.issue_dt);
 });
 
+// Function to position the labels dynamically
+function positionLabels() {
+  // Calculate current width and height from scales
+  const currentWidth = cumXScale.range()[1] - cumXScale.range()[0];
+  const currentHeight = cumYScale.range()[0] - cumYScale.range()[1];
+
+  // Position X Label: centered horizontally, slightly below the X axis
+  xLabel
+    .attr("x", (cumXScale.range()[0] + cumXScale.range()[1]) / 2)
+    .attr("y", cumYScale.range()[0] + 30)
+    .attr("dy", "0.71em"); // Fine-tune vertical alignment
+
+  // Position Y Label: centered vertically, slightly left of the Y axis
+  yLabel
+    .attr("x", -(cumYScale.range()[0] + cumYScale.range()[1]) / 2)
+    .attr("y", MARGIN.LEFT - 50)
+    .attr("dy", "0.71em"); // Fine-tune horizontal alignment
+}
+
 // Function to update dimensions based on container size
 function updateDimensions() {
   const container = document.getElementById("vis");
   const containerWidth = container.clientWidth;
-  const containerHeight = container.clientHeight;
 
-  WIDTH = containerWidth - MARGIN.LEFT - MARGIN.RIGHT;
-  HEIGHT = containerHeight - MARGIN.TOP - MARGIN.BOTTOM;
+  const newWidth = Math.min(WIDTH, containerWidth);
+  const newHeight = newWidth * HEIGHT_WIDTH_RATIO;
+
+  console.log(containerWidth);
 
   // Update scales
-  cumXScale.range([0, WIDTH]);
-  cumYScale.range([HEIGHT, 0]);
+  cumXScale.range([MARGIN.LEFT, newWidth - MARGIN.RIGHT]);
+  cumYScale.range([newHeight - MARGIN.BOTTOM, MARGIN.TOP]);
 
-  if (xAxis) {
-    xAxis
-      .attr("transform", `translate(0,${HEIGHT})`)
-      .call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
-  }
+  // update axes
+  xAxis
+    .attr("transform", `translate(0,${newHeight - MARGIN.BOTTOM})`)
+    .call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
 
-  if (yAxis) {
-    yAxis.call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
-  }
+  yAxis.call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
+
+  positionLabels();
 
   // Update SVG size
-  svg.attr(
-    "viewBox",
-    `0 0 ${WIDTH + MARGIN.LEFT + MARGIN.RIGHT} ${
-      HEIGHT + MARGIN.TOP + MARGIN.BOTTOM
-    }`
-  );
-
-  // Update labels positions
   svg
-    .select(".x-label")
-    .attr("y", HEIGHT + MARGIN.BOTTOM - 10)
-    .attr("x", WIDTH / 2);
+    .attr("width", newWidth + MARGIN.LEFT + MARGIN.RIGHT)
+    .attr("height", newHeight + MARGIN.TOP + MARGIN.BOTTOM);
 
-  svg
-    .select(".y-label")
-    .attr("x", -HEIGHT / 2)
-    .attr("y", -MARGIN.LEFT + 20);
-
-  // Update nodes positions
   svg
     .selectAll(".nodes")
     .attr("cx", (d) => cumXScale(d.row_pct))
@@ -102,14 +109,19 @@ function updateDimensions() {
   // Update image positions if necessary
   svg
     .select(".embedded-image")
-    .attr("x", WIDTH / 2 - 50)
-    .attr("y", HEIGHT / 4)
+    .attr("x", newWidth / 2 - 50)
+    .attr("y", newHeight / 4)
     .attr("transform", `rotate(0, ${WIDTH / 2}, ${HEIGHT / 2})`);
 
   svg
     .select(".image-group foreignObject")
-    .attr("x", WIDTH / 2 - 100)
-    .attr("y", HEIGHT / 4 + 270);
+    .attr("x", newWidth / 2 - 100)
+    .attr("y", newHeight / 4 + 270);
+
+  svg
+    .select(".map-foreignobject")
+    .attr("width", newWidth - MARGIN.LEFT - MARGIN.RIGHT) // Adjust based on your layout
+    .attr("height", newHeight);
 }
 
 // All the initial elements should be created in the drawInitial function
@@ -137,24 +149,22 @@ function drawInitial() {
     .attr("opacity", 1);
 
   // labels
-  const xLabel = svg
+  xLabel = svg
     .append("text")
     .attr("class", "x-label")
-    .attr("y", HEIGHT + 20)
-    .attr("x", WIDTH / 2)
     .attr("font-size", "20px")
     .attr("text-anchor", "middle")
     .text("Share of drivers");
 
-  const yLabel = svg
+  yLabel = svg
     .append("text")
     .attr("class", "y-label")
     .attr("transform", "rotate(-90)")
-    .attr("y", MARGIN.LEFT - 30)
-    .attr("x", -250)
     .attr("font-size", "20px")
     .attr("text-anchor", "middle")
     .text("Share of school zone violations");
+
+  positionLabels();
 
   xAxis = svg
     .append("g")
@@ -180,17 +190,7 @@ function drawInitial() {
 
   // Selection of all the circles
   // Append a div element for the tooltip (hidden by default)
-  const tooltip = d3
-    .select("body")
-    .append("div")
-    .style("position", "absolute")
-    .style("background-color", "white")
-    .style("border", "1px solid #ccc")
-    .style("padding", "5px")
-    .style("border-radius", "5px")
-    .style("box-shadow", "0px 2px 5px rgba(0, 0, 0, 0.3)")
-    .style("pointer-events", "all")
-    .style("opacity", 0); // Initially hidden
+  const tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
   // Create nodes
   const nodes = svg
@@ -212,7 +212,6 @@ function drawInitial() {
       if (d3.select(this).attr("opacity") > 0) {
         // Show the tooltip
         tooltip
-          .style("opacity", 1)
           .html(
             `<strong>Plate ID:</strong> ${d.plate_id}<br>
            <strong>Registration state:</strong> ${d.registration_state}
@@ -223,7 +222,8 @@ function drawInitial() {
            `
           )
           .style("left", `${event.pageX + 10}px`) // Position tooltip near the mouse
-          .style("top", `${event.pageY + 10}px`);
+          .style("top", `${event.pageY + 10}px`)
+          .classed("visible", true);
 
         // Optionally, highlight the node
         d3.select(this).attr("stroke", "orange").attr("stroke-width", 8);
@@ -237,7 +237,7 @@ function drawInitial() {
     })
     .on("mouseout", function () {
       // Hide the tooltip
-      tooltip.style("opacity", 0);
+      tooltip.classed("visible", false);
 
       // Remove highlight
       d3.select(this).attr("stroke", "none");
@@ -334,9 +334,7 @@ function drawInitial() {
     );
 
   // Add window resize listener
-  window.addEventListener("resize", () => {
-    // updateDimensions();
-  });
+  window.addEventListener("resize", updateDimensions);
 }
 
 function showImage() {
@@ -813,3 +811,6 @@ scroll.on("progress", function (index, progress) {
     // Any specific interactions during scroll progress
   }
 });
+
+// reload on top of page
+history.scrollRestoration = "manual";

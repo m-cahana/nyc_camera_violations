@@ -26,14 +26,14 @@ function scroller() {
 
     sections.each(function (d, i) {
       let top = this.getBoundingClientRect().top;
+      const style = window.getComputedStyle(this);
+      const marginBottom = parseFloat(style.marginBottom);
 
       if (i === 0) {
         startPos = top;
       }
-      sectionPositions.push(top - startPos);
+      sectionPositions.push(top - startPos + marginBottom);
     });
-
-    console.log(sectionPositions);
   }
 
   function position() {
@@ -42,8 +42,6 @@ function scroller() {
     sectionIndex = Math.min(sections.size() - 1, sectionIndex);
 
     if (currentIndex !== sectionIndex) {
-      console.log(`pos: ${pos}`);
-      console.log(`index: ${currentIndex}`);
       dispatch.call("active", this, sectionIndex);
       currentIndex = sectionIndex;
     }
