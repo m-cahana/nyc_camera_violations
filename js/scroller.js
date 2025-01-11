@@ -1,4 +1,4 @@
-function scroller() {
+export function scroller() {
   let container = d3.select("body");
   let dispatch = d3.dispatch("active", "progress");
   let sections = d3.selectAll(".step");

@@ -106,4 +106,47 @@ while i < len(merged):
 sparse_gradual_merged = merged.iloc[selected_indices]
 
 # Show the result
-spars
+sparse_gradual_merged.to_csv('../processed/school_zone_violations_sparser.csv', index = False)
+
+# ----- visualize -----
+
+visualize_distribution(violations_agg, 7)
+visualize_distribution(violations_agg, 36)
+
+# ----- mean comparison -----
+
+merged.red_light_violations.mean()
+
+merged.groupby('school_zone_violations_binned').agg(
+    red_light_violations = ('red_light_violations', 'mean'), 
+    n = ('plate_id', 'count')).reset_index()
+
+
+# ---- individual lookup ----- 
+
+# resources:
+# - https://github.com/xmunoz/sodapy?tab=readme-ov-file#getdataset_identifier-content_typejson-kwargs
+# - https://dev.socrata.com/foundry/data.cityofnewyork.us/869v-vr48
+
+from constants import google_maps_api_key
+
+# Unauthenticated client only works with public data sets. 'None' in place of application token
+
+sample_plate = school_zone_agg[
+    school_zone_agg.school_zone_violations_binned == '51+'].plate_id.iloc[0]
+
+client = Socrata("data.cityofnewyork.us", None)
+
+results = pd.DataFrame.from_records(
+    client.get("869v-vr48", 
+               plate_id = sample_plate, 
+               violation_code = '36'))
+
+sample_address = (
+    results.iloc[0].street_name + 
+    results.iloc[0].intersecting_street + ' ' + 
+    results.iloc[0].violation_county  
+).replace('@', '&')
+
+gmaps = googlemaps.Client(key=google_maps_api_key)
+geocode_result = gmaps.geocode(sample_address)

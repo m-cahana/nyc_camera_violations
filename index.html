@@ -17,11 +17,15 @@
   </head>
 
   <body>
+    <div id="loader">
+      <div class="spinner"></div>
+    </div>
+
     <main id="main-content">
       <div id="graphic">
         <div id="sections">
           <section class="step">
-            <div class="title">NYC SPEED</div>
+            <div class="title">NYC Speed</div>
             Here we go pie chart first? Lorem ipsum dolor sit amet, consectetur
             adipiscing elit. In quis lacus ac orci vehicula tincidunt semper a
             justo. Cras quis urna non lacus rhoncus vulputate dignissim sit amet
@@ -37,7 +41,7 @@
           <section class="step">Blah blah blahhhhh</section>
           <section class="step">Blah blah blahhhhh</section>
           <section class="step">Picture...</section>
-          <section class="step">Map!</section>
+          <section class="step">Map</section>
         </div>
         <div id="vis-container">
           <div id="vis">
@@ -100,8 +104,9 @@
       </footer>
     </main>
 
-    <script src="js/scroller.js"></script>
-    <script src="js/sections.js"></script>
+    <script type="module" src="js/scroller.js"></script>
+    <script type="module" src="js/sections.js"></script>
     <script src="js/dynamic_static.js"></script>
+    <script src="js/loader.js"></script>
   </body>
 </html>

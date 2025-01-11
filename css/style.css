@@ -3,8 +3,9 @@
 @import url("https://fonts.googleapis.com/css?family=Domine:400,700&display=swap");
 
 body {
-  background-color: rgb(255, 255, 255);
-  font-family: "Monospace";
+  background-color: #ffffff;
+  font-family: "serif";
+  font-size: 14px;
   overflow-x: hidden;
 }
 
@@ -13,6 +14,45 @@ body {
   flex-direction: column;
 } */
 
+/* Loader Overlay */
+#loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ffffff; /* Background color of the loader */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Ensure the loader stays on top */
+  transition: opacity 1s ease; /* Smooth fade-out transition */
+}
+
+/* Spinner Design */
+.spinner {
+  width: 80px;
+  height: 80px;
+  border: 6px solid #f3f3f3; /* Light grey border */
+  border-top: 6px solid #3498db; /* Blue border on top */
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite; /* Spin animation */
+}
+
+/* Spinner Animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Optional: Prevent scrolling while loading */
+body.loading {
+  overflow: hidden;
+}
 #footer {
   border-top: solid;
 }
@@ -34,14 +74,19 @@ body {
   flex-direction: column;
   width: 250px;
   top: 60px;
-  z-index: 90;
+  z-index: 101;
   margin-right: 50px;
+}
+
+svg {
+  z-index: 100;
 }
 
 #vis-container {
   position: relative; /* Positioned ancestor for absolute positioning */
   /* Ensure the container spans the full viewport height if needed */
   min-height: 93vh;
+  z-index: 10;
 }
 
 #vis {
@@ -67,7 +112,6 @@ body {
 .step {
   margin-bottom: 100px;
   min-height: 700px;
-  font-family: "Domine";
   font-weight: 400;
   line-height: 1.4em;
   text-align: justify;
@@ -75,6 +119,21 @@ body {
   z-index: 101;
   position: relative;
   width: 90%; /* Adjust as needed */
+}
+
+#step.z {
+  z-index: 1000;
+  position: absolute;
+}
+
+.image-group {
+  z-index: 10;
+  position: relative;
+}
+
+image {
+  z-index: 10;
+  position: relative;
 }
 
 .tick line {
@@ -91,7 +150,7 @@ body {
   pointer-events: all;
   opacity: 0; /* Hidden by default */
   transition: opacity 0.3s ease; /* Smooth fade-in and fade-out */
-  z-index: 1000; /* Ensure tooltip appears above other elements */
+  z-index: 99; /* Ensure tooltip appears above other elements */
 }
 
 /* Tooltip Visible State */
@@ -167,6 +226,21 @@ svg circle:hover {
   border-color: #999;
 }
 
+/* Styling for the X-axis label */
+.x-label,
+.y-label {
+  font-size: 16px;
+  text-anchor: middle;
+  fill: #000; /* Optional: Set text color */
+  /* Add any other desired styles */
+}
+
+.title {
+  font-size: 20px;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
 /* Responsive Adjustments */
 @media screen and (min-width: 1100px) {
   #vis {
@@ -181,10 +255,13 @@ svg circle:hover {
   .step {
     width: 90%; /* Slightly less than 100% for margins */
     max-width: 700px; /* Maintain a max-width for better readability */
-    margin: 20px auto; /* Center horizontally and add vertical spacing */
+    margin: 0px auto; /* Center horizontally and add vertical spacing */
     text-align: center; /* Center the text content */
-    border-style: solid;
+    border-width: 2px;
     margin-bottom: 500px;
+    background-color: rgb(239, 249, 247);
+    border-radius: 15px;
+    padding: 20px;
   }
 
   #graphic {
@@ -212,6 +289,13 @@ svg circle:hover {
     transform: translateX(-50%); /* Shift left by 50% of #vis's width */
     width: 90%; /* Adjust width for better fit on small screens */
     max-width: 800px; /* Optional: Set a smaller max-width */
+  }
+
+  #vis.static {
+    position: sticky;
+    top: 0px;
+    left: 80%; /* Position left edge at 50% of viewport width */
+    transform: translateX(-50%); /* Shift left by 50% of #vis's width */
   }
 
   #map-container {

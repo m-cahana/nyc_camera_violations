@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   const footer = document.getElementById("footer");
-  // const header = document.getElementById("header");
   const vis = document.getElementById("vis");
 
   // Create an intersection observer
@@ -22,5 +21,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const observer = new IntersectionObserver(observerCallback, observerOptions);
   observer.observe(footer);
-  // observer.observe(header);
 });

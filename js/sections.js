@@ -6,7 +6,8 @@ let cumXScale, cumYScale;
 let xAxis, yAxis;
 let simulation;
 let selectedPlateID = null;
-let map; // Global map instance
+let map, mapContainer; // Global map instance
+let selectButton;
 
 const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
 let WIDTH = 800;
@@ -15,6 +16,8 @@ let HEIGHT = 500;
 let HEIGHT_WIDTH_RATIO = HEIGHT / WIDTH;
 
 const DOT = { RADIUS: 5, OPACITY: 0.2 };
+
+import { scroller } from "./scroller.js";
 
 // Read Data, convert numerical categories into floats
 // Create the initial visualisation
@@ -42,13 +45,6 @@ d3.csv("data/processed/repeat_offenders_lat_long_sample.csv").then((data) => {
 
   mapDataset = data.filter((d) => d.lat != 0 && d.long != 0);
   mapPlates = [...new Set(data.map((d) => d.plate_id))];
-
-  mapDateMax = [...data.map((d) => d.issue_dt)].reduce(function (a, b) {
-    return a > b ? a : b;
-  });
-  mapDateMin = [...data.map((d) => d.issue_dt)].reduce(function (a, b) {
-    return a < b ? a : b;
-  });
 
   // Sort the dataset by date for efficient processing
   mapDataset.sort((a, b) => a.issue_dt - b.issue_dt);
@@ -120,7 +116,7 @@ function updateDimensions() {
 
   svg
     .select(".map-foreignobject")
-    .attr("width", newWidth - MARGIN.LEFT - MARGIN.RIGHT) // Adjust based on your layout
+    .attr("width", newWidth) // Adjust based on your layout
     .attr("height", newHeight);
 }
 
@@ -149,19 +145,12 @@ function drawInitial() {
     .attr("opacity", 1);
 
   // labels
-  xLabel = svg
-    .append("text")
-    .attr("class", "x-label")
-    .attr("font-size", "20px")
-    .attr("text-anchor", "middle")
-    .text("Share of drivers");
+  xLabel = svg.append("text").attr("class", "x-label").text("Share of drivers");
 
   yLabel = svg
     .append("text")
     .attr("class", "y-label")
     .attr("transform", "rotate(-90)")
-    .attr("font-size", "20px")
-    .attr("text-anchor", "middle")
     .text("Share of school zone violations");
 
   positionLabels();
@@ -282,7 +271,7 @@ function drawInitial() {
     .style("color", "#333");
 
   // Append the select element to the wrapper
-  const selectButton = selectWrapper
+  selectButton = selectWrapper
     .append("select")
     .attr("id", "selectButton")
     .style("width", "200px"); // Adjust width as needed
@@ -335,12 +324,6 @@ function drawInitial() {
 
   // Add window resize listener
   window.addEventListener("resize", updateDimensions);
-}
-
-function showImage() {
-  cleanHist();
-  hideMap();
-  d3.select(".embedded-image").transition().duration(500).style("opacity", 1);
 }
 
 // Function to show and rotate the image group
@@ -529,6 +512,7 @@ function drawMapbox() {
 
   // Function to load borough boundaries
   async function loadBoroughs() {
+    console.log("boroughs");
     const response = await fetch("data/raw/Borough Boundaries.geojson");
     if (!response.ok) {
       throw new Error("Failed to load borough boundaries.");
@@ -790,6 +774,10 @@ let lastIndex,
 
 scroll.on("active", function (index) {
   d3.selectAll(".step")
+    .each(function (d, i) {
+      // Set z-index: higher for the active step, lower for others
+      d3.select(this).classed("z", i === index ? true : false);
+    })
     .transition()
     .duration(500)
     .style("opacity", function (d, i) {
