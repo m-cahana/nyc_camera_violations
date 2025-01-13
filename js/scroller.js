@@ -1,8 +1,9 @@
 export function scroller() {
   let container = d3.select("body");
   let dispatch = d3.dispatch("active", "progress");
-  let sections = d3.selectAll(".step");
-  let sectionPositions;
+  let sections = d3.selectAll(".step:not(.ghost)");
+
+  let sectionPositions, ghostSectionPositions;
 
   let currentIndex = -1;
   let containerStart = 0;
@@ -26,18 +27,24 @@ export function scroller() {
 
     sections.each(function (d, i) {
       let top = this.getBoundingClientRect().top;
+      let height = this.getBoundingClientRect().height;
       const style = window.getComputedStyle(this);
       const marginBottom = parseFloat(style.marginBottom);
 
       if (i === 0) {
         startPos = top;
       }
-      sectionPositions.push(top - startPos + marginBottom);
+
+      sectionPositions.push(top - startPos + marginBottom + height);
     });
+
+    console.log(sectionPositions);
   }
 
   function position() {
     let pos = window.pageYOffset - 300 - containerStart;
+    console.log(`position: ${pos}`);
+
     let sectionIndex = d3.bisect(sectionPositions, pos);
     sectionIndex = Math.min(sections.size() - 1, sectionIndex);
 

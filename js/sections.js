@@ -773,31 +773,28 @@ let lastIndex,
   activeIndex = 0;
 
 scroll.on("active", function (index) {
-  d3.selectAll(".step")
-    .each(function (d, i) {
-      // Set z-index: higher for the active step, lower for others
-      d3.select(this).classed("z", i === index ? true : false);
-    })
-    .transition()
-    .duration(500)
-    .style("opacity", function (d, i) {
-      return i === index ? 1 : 0.1;
-    });
+  // d3.selectAll(".step")
+  //   .each(function (d, i) {
+  //     d3.select(this).classed("z", i === index ? true : false);
+  //   })
+  //   .transition()
+  //   .duration(500)
+
+  //   .style("opacity", function (d, i) {
+  //     return this.classList.contains("ghost") ? 0 : i === index ? 1 : 0.1;
+  //   });
 
   activeIndex = index;
+
+  // d3.select("#sections").classed("z", activeIndex % 2 !== 0);
   let sign = activeIndex - lastIndex < 0 ? -1 : 1;
   let scrolledSections = d3.range(lastIndex + sign, activeIndex + sign, sign);
+
   scrolledSections.forEach((i) => {
     console.log(i);
     activationFunctions[i]();
   });
   lastIndex = activeIndex;
-});
-
-scroll.on("progress", function (index, progress) {
-  if ((index == 2) & (progress > 0.7)) {
-    // Any specific interactions during scroll progress
-  }
 });
 
 // reload on top of page
