@@ -37,13 +37,10 @@ export function scroller() {
 
       sectionPositions.push(top - startPos + marginBottom + height);
     });
-
-    console.log(sectionPositions);
   }
 
   function position() {
     let pos = window.pageYOffset - 300 - containerStart;
-    console.log(`position: ${pos}`);
 
     let sectionIndex = d3.bisect(sectionPositions, pos);
     sectionIndex = Math.min(sections.size() - 1, sectionIndex);

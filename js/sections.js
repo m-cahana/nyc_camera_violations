@@ -2,12 +2,13 @@ let histDataset, mapDataset, mapPlates;
 let svg, g;
 let xLabel, yLabel;
 let plates, selectedPlateDates;
-let cumXScale, cumYScale;
+let cumXScale, cumYScale, nodes;
 let xAxis, yAxis;
 let simulation;
 let selectedPlateID = null;
 let map, mapContainer; // Global map instance
 let selectButton;
+let DOT_ADJUSTMENT_FACTOR = 1;
 
 const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
 let WIDTH = 800;
@@ -77,7 +78,7 @@ function updateDimensions() {
   const newWidth = Math.min(WIDTH, containerWidth);
   const newHeight = newWidth * HEIGHT_WIDTH_RATIO;
 
-  console.log(containerWidth);
+  DOT_ADJUSTMENT_FACTOR = newWidth / WIDTH;
 
   // Update scales
   cumXScale.range([MARGIN.LEFT, newWidth - MARGIN.RIGHT]);
@@ -97,10 +98,15 @@ function updateDimensions() {
     .attr("width", newWidth + MARGIN.LEFT + MARGIN.RIGHT)
     .attr("height", newHeight + MARGIN.TOP + MARGIN.BOTTOM);
 
-  svg
-    .selectAll(".nodes")
+  nodes
     .attr("cx", (d) => cumXScale(d.row_pct))
-    .attr("cy", (d) => cumYScale(d.cum_share));
+    .attr("cy", (d) => cumYScale(d.cum_share))
+    .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR);
+
+  // Update the force simulation with new scales
+  simulation
+    .force("forceX", d3.forceX((d) => cumXScale(d.row_pct)).strength(0.075))
+    .force("forceY", d3.forceY((d) => cumYScale(d.cum_share)).strength(0.075));
 
   // Update image positions if necessary
   svg
@@ -126,22 +132,30 @@ function updateDimensions() {
 // Each element should also have an associated class name for easy reference
 
 function drawInitial() {
+  const container = document.getElementById("vis");
+  const containerWidth = container.clientWidth;
+
+  const ADJ_WIDTH = Math.min(WIDTH, containerWidth);
+  const ADJ_HEIGHT = ADJ_WIDTH * HEIGHT_WIDTH_RATIO;
+
+  DOT_ADJUSTMENT_FACTOR = ADJ_WIDTH / WIDTH;
+
   // axes
   cumXScale = d3
     .scaleLinear()
     .domain([0, 100])
-    .range([MARGIN.LEFT, WIDTH - MARGIN.RIGHT]);
+    .range([MARGIN.LEFT, ADJ_WIDTH - MARGIN.RIGHT]);
 
   cumYScale = d3
     .scaleLinear()
     .domain([0, 100])
-    .range([HEIGHT - MARGIN.BOTTOM, MARGIN.TOP]);
+    .range([ADJ_HEIGHT - MARGIN.BOTTOM, MARGIN.TOP]);
 
   svg = d3
     .select("#vis")
     .append("svg")
-    .attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
-    .attr("height", HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
+    .attr("width", ADJ_WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
+    .attr("height", ADJ_HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
     .attr("opacity", 1);
 
   // labels
@@ -158,7 +172,7 @@ function drawInitial() {
   xAxis = svg
     .append("g")
     .attr("class", "x-axis")
-    .attr("transform", `translate(0,${HEIGHT - MARGIN.BOTTOM})`);
+    .attr("transform", `translate(0,${ADJ_HEIGHT - MARGIN.BOTTOM})`);
 
   xAxis.call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
 
@@ -182,7 +196,7 @@ function drawInitial() {
   const tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
   // Create nodes
-  const nodes = svg
+  nodes = svg
     .selectAll("circle")
     .data(histDataset)
     .enter()
@@ -194,9 +208,8 @@ function drawInitial() {
     .attr("cy", function (d) {
       return cumYScale(d.cum_share);
     })
-    .attr("r", DOT.RADIUS)
+    .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR)
     .attr("opacity", DOT.OPACITY)
-    .attr("fill", "blue")
     .on("mouseover", function (event, d) {
       if (d3.select(this).attr("opacity") > 0) {
         // Show the tooltip
@@ -215,7 +228,7 @@ function drawInitial() {
           .classed("visible", true);
 
         // Optionally, highlight the node
-        d3.select(this).attr("stroke", "orange").attr("stroke-width", 8);
+        d3.select(this).classed("highlighted", true);
       }
     })
     .on("mousemove", function (event) {
@@ -229,22 +242,28 @@ function drawInitial() {
       tooltip.classed("visible", false);
 
       // Remove highlight
-      d3.select(this).attr("stroke", "none");
+      d3.select(this).classed("highlighted", false);
     });
 
   // Stop the simulation until later
   simulation
     .force("forceX", d3.forceX((d) => cumXScale(d.row_pct)).strength(0.075))
     .force("forceY", d3.forceY((d) => cumYScale(d.cum_share)).strength(0.075))
-    .force("collide", d3.forceCollide().radius(1.5));
+    .force(
+      "collide",
+      d3
+        .forceCollide()
+        .radius((d) => (DOT.RADIUS * DOT_ADJUSTMENT_FACTOR) / 2.5)
+        .strength(0.7)
+    );
 
   simulation.alpha(0.75).restart();
 
   // Append the Mapbox foreignObject, positioned to the right of the dropdown
   svg
     .append("foreignObject")
-    .attr("width", WIDTH)
-    .attr("height", HEIGHT)
+    .attr("width", ADJ_WIDTH)
+    .attr("height", ADJ_HEIGHT)
     .attr("x", 0)
     .attr("y", MARGIN.TOP)
     .attr("class", "map-foreignobject")
@@ -267,7 +286,7 @@ function drawInitial() {
     .attr("for", "selectButton")
     .text("Plate ID: ")
     .style("margin-right", "5px")
-    .style("font-size", "14px")
+
     .style("color", "#333");
 
   // Append the select element to the wrapper
@@ -298,19 +317,19 @@ function drawInitial() {
   imageGroup
     .append("image")
     .attr("href", "images/crash-car-1.png") // Replace with your PNG path
-    .attr("x", WIDTH / 2 - 50) // Adjust x position
-    .attr("y", HEIGHT / 4) // Adjust y position
+    .attr("x", ADJ_WIDTH / 2 - 50) // Adjust x position
+    .attr("y", ADJ_HEIGHT / 4) // Adjust y position
     .attr("width", 300) // Adjust width
     .attr("height", 300) // Adjust height
     .attr("class", "embedded-image") // Assign a class for styling
     // Initial rotation set to 0 degrees
-    .attr("transform", `rotate(0, ${WIDTH / 2}, ${HEIGHT / 2})`);
+    .attr("transform", `rotate(0, ${ADJ_WIDTH / 2}, ${ADJ_HEIGHT / 2})`);
 
   // Append the caption text beneath the image within the same group
   imageGroup
     .append("foreignObject")
-    .attr("x", WIDTH / 2 + 100 - 100) // Adjust x as needed
-    .attr("y", HEIGHT / 4 + 300 - 30) // Adjust y as needed
+    .attr("x", ADJ_WIDTH / 2 + 100 - 100) // Adjust x as needed
+    .attr("y", ADJ_HEIGHT / 4 + 300 - 30) // Adjust y as needed
     .attr("width", 200) // Adjust width as needed
     .attr("height", 50) // Adjust height as needed
     .style("pointer-events", "none") // Ensure it doesn't capture mouse events
@@ -322,7 +341,11 @@ function drawInitial() {
       "<span>Repeat offender crash in 2021</span><br/><span>Photo by Liam Quiqley</span>"
     );
 
+  // update dimensions on the jump
+  updateDimensions();
+
   // Add window resize listener
+
   window.addEventListener("resize", updateDimensions);
 }
 
@@ -382,7 +405,7 @@ function regenerateAxes(data, nodes) {
     .call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
 }
 
-function drawHist(xLower = 0, xHigher = 100) {
+function drawHist(xLower = 0, xHigher = 100, simRestart = true) {
   const svg = d3.select("#vis").select("svg");
 
   svg.select(".x-label").style("display", "block");
@@ -401,23 +424,28 @@ function drawHist(xLower = 0, xHigher = 100) {
   // Regenerate axes based on the limited data
   regenerateAxes(limitedData);
 
+  simulation
+    .force("forceX", d3.forceX((d) => cumXScale(d.row_pct)).strength(0.075))
+    .force("forceY", d3.forceY((d) => cumYScale(d.cum_share)).strength(0.075));
+
+  simulation.alpha(1.5).restart();
+
   // Bind all existing nodes to the full histDataset (don't remove any nodes)
-  const nodes = svg.selectAll(".nodes").data(histDataset);
+  // nodes = svg.selectAll(".nodes").data(histDataset);
 
   // Update all nodes
+
+  console.log(cumXScale.domain());
+
   nodes
     .transition()
     .duration(500)
     .attr("cx", (d) => cumXScale(d.row_pct))
     .attr("cy", (d) => cumYScale(d.cum_share))
-    .attr("r", DOT.RADIUS)
+    .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR)
     .attr("opacity", (d) => (limitedData.includes(d) ? DOT.OPACITY : 0)); // Semi-transparent for others
 
   // Restart the simulation to reflect changes
-  simulation
-    .nodes(histDataset) // Keep the full histDataset in the simulation
-    .alpha(0.75)
-    .restart();
 }
 
 function cleanHist() {
