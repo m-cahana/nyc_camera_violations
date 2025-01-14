@@ -9,6 +9,8 @@ let selectedPlateID = null;
 let map, mapContainer; // Global map instance
 let selectButton;
 let DOT_ADJUSTMENT_FACTOR = 1;
+let xTickCount, yTickCount;
+let ADJ_WIDTH, ADJ_HEIGHT;
 
 const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
 let WIDTH = 800;
@@ -17,6 +19,7 @@ let HEIGHT = 500;
 let HEIGHT_WIDTH_RATIO = HEIGHT / WIDTH;
 
 const DOT = { RADIUS: 5, OPACITY: 0.2 };
+const TICKS = { x: 50, y: 50 };
 
 import { scroller } from "./scroller.js";
 
@@ -70,6 +73,13 @@ function positionLabels() {
     .attr("dy", "0.71em"); // Fine-tune horizontal alignment
 }
 
+function tickCounts(width, height) {
+  const x = Math.floor((width - MARGIN.LEFT - MARGIN.RIGHT) / TICKS.x);
+  const y = Math.floor((height - MARGIN.TOP - MARGIN.BOTTOM) / TICKS.y);
+
+  return [x, y];
+}
+
 // Function to update dimensions based on container size
 function updateDimensions() {
   const container = document.getElementById("vis");
@@ -84,12 +94,23 @@ function updateDimensions() {
   cumXScale.range([MARGIN.LEFT, newWidth - MARGIN.RIGHT]);
   cumYScale.range([newHeight - MARGIN.BOTTOM, MARGIN.TOP]);
 
-  // update axes
-  xAxis
-    .attr("transform", `translate(0,${newHeight - MARGIN.BOTTOM})`)
-    .call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
+  // Determine dynamic tick counts
+  [xTickCount, yTickCount] = tickCounts(newWidth, newHeight);
 
-  yAxis.call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
+  // update axes
+  xAxis.attr("transform", `translate(0,${newHeight - MARGIN.BOTTOM})`).call(
+    d3
+      .axisBottom(cumXScale)
+      .tickFormat((d) => `${d}%`)
+      .ticks(xTickCount)
+  );
+
+  yAxis.call(
+    d3
+      .axisLeft(cumYScale)
+      .tickFormat((d) => `${d}%`)
+      .ticks(yTickCount)
+  );
 
   positionLabels();
 
@@ -135,8 +156,10 @@ function drawInitial() {
   const container = document.getElementById("vis");
   const containerWidth = container.clientWidth;
 
-  const ADJ_WIDTH = Math.min(WIDTH, containerWidth);
-  const ADJ_HEIGHT = ADJ_WIDTH * HEIGHT_WIDTH_RATIO;
+  ADJ_WIDTH = Math.min(WIDTH, containerWidth);
+  ADJ_HEIGHT = ADJ_WIDTH * HEIGHT_WIDTH_RATIO;
+
+  [xTickCount, yTickCount] = tickCounts(ADJ_WIDTH, ADJ_HEIGHT);
 
   DOT_ADJUSTMENT_FACTOR = ADJ_WIDTH / WIDTH;
 
@@ -174,14 +197,24 @@ function drawInitial() {
     .attr("class", "x-axis")
     .attr("transform", `translate(0,${ADJ_HEIGHT - MARGIN.BOTTOM})`);
 
-  xAxis.call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
+  xAxis.call(
+    d3
+      .axisBottom(cumXScale)
+      .tickFormat((d) => `${d}%`)
+      .ticks(xTickCount)
+  );
 
   yAxis = svg
     .append("g")
     .attr("class", "y-axis")
     .attr("transform", `translate(${MARGIN.LEFT},0)`);
 
-  yAxis.call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
+  yAxis.call(
+    d3
+      .axisLeft(cumYScale)
+      .tickFormat((d) => `${d}%`)
+      .ticks(yTickCount)
+  );
 
   // Instantiate the force simulation
   simulation = d3.forceSimulation(histDataset);
@@ -395,17 +428,29 @@ function regenerateAxes(data, nodes) {
   cumXScale.domain([minRowPct, maxRowPct]);
   cumYScale.domain([minCumShare, maxCumShare]);
 
+  [xTickCount, yTickCount] = tickCounts(ADJ_WIDTH, ADJ_HEIGHT);
+
   xAxis
     .transition()
     .duration(500)
-    .call(d3.axisBottom(cumXScale).tickFormat((d) => `${d}%`));
+    .call(
+      d3
+        .axisBottom(cumXScale)
+        .tickFormat((d) => `${d}%`)
+        .ticks(xTickCount)
+    );
   yAxis
     .transition()
     .duration(500)
-    .call(d3.axisLeft(cumYScale).tickFormat((d) => `${d}%`));
+    .call(
+      d3
+        .axisLeft(cumYScale)
+        .tickFormat((d) => `${d}%`)
+        .ticks(yTickCount)
+    );
 }
 
-function drawHist(xLower = 0, xHigher = 100, simRestart = true) {
+function drawHist(xLower = 0, xHigher = 100) {
   const svg = d3.select("#vis").select("svg");
 
   svg.select(".x-label").style("display", "block");
@@ -430,13 +475,6 @@ function drawHist(xLower = 0, xHigher = 100, simRestart = true) {
 
   simulation.alpha(1.5).restart();
 
-  // Bind all existing nodes to the full histDataset (don't remove any nodes)
-  // nodes = svg.selectAll(".nodes").data(histDataset);
-
-  // Update all nodes
-
-  console.log(cumXScale.domain());
-
   nodes
     .transition()
     .duration(500)
@@ -444,8 +482,6 @@ function drawHist(xLower = 0, xHigher = 100, simRestart = true) {
     .attr("cy", (d) => cumYScale(d.cum_share))
     .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR)
     .attr("opacity", (d) => (limitedData.includes(d) ? DOT.OPACITY : 0)); // Semi-transparent for others
-
-  // Restart the simulation to reflect changes
 }
 
 function cleanHist() {

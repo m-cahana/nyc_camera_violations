@@ -248,6 +248,20 @@ svg circle:hover {
   /* Add any other desired styles */
 }
 
+.x-axis .tick text,
+.y-axis .tick text {
+  font-family: "Roboto", sans-serif; /* Specify your desired font */
+  font-size: 12px; /* Set your desired font size */
+  font-style: bold;
+  fill: #555; /* Optional: Set text color */
+}
+
+.x-axis path,
+.y-axis path,
+.x-axis line,
+.y-axis line {
+  stroke: #ccc; /* Set axis line color */
+}
 .title {
   font-size: 20px;
   font-style: italic;
