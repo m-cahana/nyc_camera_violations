@@ -56,7 +56,7 @@ def get_lat_long(row):
 
 # ----- data read-in -----
 
-violations_agg = pd.read_csv('../processed/parking_violations_agg_copy.csv')
+violations_agg = pd.read_csv('../processed/parking_violations_agg.csv')
 
 # ---- categorize ----- 
 red_light_agg = generate_shares(violations_agg, 7).rename(
@@ -70,11 +70,11 @@ school_zone_agg['school_zone_violations_binned'] = school_zone_agg.school_zone_v
 
 
 
-# ---- individual lookup ----- 
+# ---- plate lookup ----- 
 
 # resources:
 # - https://github.com/xmunoz/sodapy?tab=readme-ov-file#getdataset_identifier-content_typejson-kwargs
-# - https://dev.socrata.com/foundry/data.cityofnewyork.us/869v-vr48
+# - https://dev.socrata.com/foundry/data.cityofnewyork.us/pvqr-7yc4
 
 gmaps = googlemaps.Client(key=google_maps_api_key)
 client = Socrata("data.cityofnewyork.us", None)
@@ -86,19 +86,19 @@ sample_plates = school_zone_agg[
 results = pd.concat(
     [
         pd.DataFrame.from_records(
-            client.get("869v-vr48", plate_id=sample_plate, violation_code='36')
+            client.get("pvqr-7yc4", plate_id=sample_plate, violation_code='36')
         )
         for sample_plate in sample_plates
     ],
     ignore_index=True
 )
 
-# get their lat long coordinates as well
+# get their lat long coordinates 
 results['lat_long'] = results.apply(get_lat_long, axis = 1)
 results['lat'] = results.lat_long.str.split(',', expand=True)[0]
 results['long'] = results.lat_long.str.split(',', expand=True)[1]
 
-# and correct date
+# correct date
 results['issue_dt'] = pd.to_datetime(results.issue_date)
 
 # ---- output ----- 

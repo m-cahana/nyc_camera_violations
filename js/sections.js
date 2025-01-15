@@ -11,6 +11,7 @@ let selectButton;
 let DOT_ADJUSTMENT_FACTOR = 1;
 let xTickCount, yTickCount;
 let ADJ_WIDTH, ADJ_HEIGHT;
+let boroughLabelsGroup;
 
 const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
 let WIDTH = 800;
@@ -18,8 +19,17 @@ let HEIGHT = 500;
 
 let HEIGHT_WIDTH_RATIO = HEIGHT / WIDTH;
 
-const DOT = { RADIUS: 5, OPACITY: 0.2 };
+const DOT = { RADIUS: 5, OPACITY: 0.5 };
 const TICKS = { x: 50, y: 50 };
+
+// change to boroughs eventually
+const boroughCategories = {
+  Brooklyn: 0.1,
+  Queens: 0.3,
+  Manhattan: 0.5,
+  Bronx: 0.7,
+  "Staten Island": 0.9,
+};
 
 import { scroller } from "./scroller.js";
 
@@ -143,8 +153,14 @@ function updateDimensions() {
 
   svg
     .select(".map-foreignobject")
-    .attr("width", newWidth) // Adjust based on your layout
+    .attr("width", newWidth)
     .attr("height", newHeight);
+
+  // update label positions
+  svg
+    .selectAll(".borough-label")
+    .attr("x", (d) => boroughCategories[d] * newWidth)
+    .attr("y", newHeight + MARGIN.BOTTOM + 20);
 }
 
 // All the initial elements should be created in the drawInitial function
@@ -219,11 +235,6 @@ function drawInitial() {
   // Instantiate the force simulation
   simulation = d3.forceSimulation(histDataset);
 
-  // Define each tick of simulation
-  simulation.on("tick", () => {
-    nodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-  });
-
   // Selection of all the circles
   // Append a div element for the tooltip (hidden by default)
   const tooltip = d3.select("body").append("div").attr("class", "tooltip");
@@ -251,9 +262,9 @@ function drawInitial() {
             `<strong>Plate ID:</strong> ${d.plate_id}<br>
            <strong>Registration state:</strong> ${d.registration_state}
            <br>
-           <strong>Plate type:</strong> ${d.plate_type}
+           <strong>Main borough:</strong> ${d.violation_borough}
            <br>
-           <strong>School Zone Violations:</strong> ${d.school_zone_violations}
+           <strong>School zone violations:</strong> ${d.school_zone_violations}
            `
           )
           .style("left", `${event.pageX + 10}px`) // Position tooltip near the mouse
@@ -278,8 +289,12 @@ function drawInitial() {
       d3.select(this).classed("highlighted", false);
     });
 
-  // Stop the simulation until later
+  // Define each tick of simulation
   simulation
+    .on("tick", () => {
+      nodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+    })
+    // define forces
     .force("forceX", d3.forceX((d) => cumXScale(d.row_pct)).strength(0.075))
     .force("forceY", d3.forceY((d) => cumYScale(d.cum_share)).strength(0.075))
     .force(
@@ -291,6 +306,44 @@ function drawInitial() {
     );
 
   simulation.alpha(0.75).restart();
+
+  // add labels for borough packs
+
+  boroughLabelsGroup = svg
+    .append("g")
+    .attr("class", "borough-labels")
+    .style("visibility", "hidden");
+
+  boroughLabelsGroup
+    .selectAll(".borough-label")
+    .data(Object.keys(boroughCategories))
+    .enter()
+    .append("g")
+    .attr("class", "borough-label")
+    .attr(
+      "transform",
+      (d) =>
+        `translate(${boroughCategories[d] * ADJ_WIDTH}, ${ADJ_HEIGHT / 1.3})`
+    )
+    .each(function (d) {
+      const g = d3.select(this);
+
+      // Append text
+      const text = g.append("text").text(d).attr("class", "label-text");
+
+      // Get the bounding box of the text
+      const bbox = text.node().getBBox();
+      const width_padding = 20;
+      const height_padding = 10;
+
+      // Append rectangle behind the text
+      g.insert("rect", "text")
+        .attr("class", "label-rect")
+        .attr("x", bbox.x - width_padding)
+        .attr("y", bbox.y - height_padding)
+        .attr("width", bbox.width + 2 * width_padding)
+        .attr("height", bbox.height + 2 * height_padding);
+    });
 
   // Append the Mapbox foreignObject, positioned to the right of the dropdown
   svg
@@ -469,11 +522,24 @@ function drawHist(xLower = 0, xHigher = 100) {
   // Regenerate axes based on the limited data
   regenerateAxes(limitedData);
 
-  simulation
-    .force("forceX", d3.forceX((d) => cumXScale(d.row_pct)).strength(0.075))
-    .force("forceY", d3.forceY((d) => cumYScale(d.cum_share)).strength(0.075));
+  //simulation.stop();
 
-  simulation.alpha(1.5).restart();
+  simulation
+    .on("tick", () => {
+      nodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+    })
+    // define forces
+    .force("forceX", d3.forceX((d) => cumXScale(d.row_pct)).strength(0.075))
+    .force("forceY", d3.forceY((d) => cumYScale(d.cum_share)).strength(0.075))
+    .force(
+      "collide",
+      d3
+        .forceCollide()
+        .radius((d) => (DOT.RADIUS * DOT_ADJUSTMENT_FACTOR) / 2.5)
+        .strength(0.7)
+    );
+
+  simulation.alpha(2).restart();
 
   nodes
     .transition()
@@ -484,7 +550,7 @@ function drawHist(xLower = 0, xHigher = 100) {
     .attr("opacity", (d) => (limitedData.includes(d) ? DOT.OPACITY : 0)); // Semi-transparent for others
 }
 
-function cleanHist() {
+function cleanHist(keepNodes = false) {
   const svg = d3.select("#vis").select("svg");
 
   svg.select(".x-label").style("display", "none");
@@ -493,7 +559,42 @@ function cleanHist() {
   svg.select(".x-axis").style("display", "none");
   svg.select(".y-axis").style("display", "none");
 
-  svg.selectAll(".nodes").style("display", "none");
+  if (!keepNodes) {
+    svg.selectAll(".nodes").style("display", "none");
+  }
+}
+
+function drawBoroughPacks() {
+  const svg = d3.select("#vis").select("svg");
+  svg.selectAll(".nodes").style("display", "block");
+
+  nodes
+    .transition()
+    .duration(300)
+    .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR * 1.5);
+
+  simulation.alpha(2).restart();
+
+  simulation
+    .force("charge", d3.forceManyBody().strength(0.1))
+    .force(
+      "forceX",
+      d3.forceX((d) => boroughCategories[d.violation_borough] * ADJ_WIDTH)
+    )
+    .force(
+      "forceY",
+      d3.forceY((d) => ADJ_HEIGHT / 2)
+    )
+    .force("collide", d3.forceCollide(10))
+    .alphaDecay([0.05]);
+
+  simulation.alpha(0.9).restart();
+
+  boroughLabelsGroup.style("visibility", "visible");
+}
+
+function cleanBoroughPacks() {
+  boroughLabelsGroup.style("visibility", "hidden");
 }
 
 // Function to draw the Mapbox map (as defined earlier)
@@ -522,7 +623,7 @@ function drawMapbox() {
 
   map = new mapboxgl.Map({
     container: "map", // ID of the div in foreignObject
-    style: "mapbox://styles/mapbox/dark-v11",
+    style: "mapbox://styles/mapbox/light-v11",
     center: [-74.006, 40.7128], // [lng, lat] of NYC
     zoom: 12,
   });
@@ -808,15 +909,22 @@ let activationFunctions = [
     hideMap();
   },
   () => {
-    drawHist(50, 100);
+    drawHist(50.5, 100);
     hideMap();
   },
   () => {
     drawHist(95, 100);
     hideImage();
     hideMap();
+    cleanBoroughPacks();
   },
   () => {
+    cleanHist(true);
+    hideImage();
+    drawBoroughPacks();
+  },
+  () => {
+    cleanBoroughPacks();
     showImage();
     cleanHist();
     hideMap();
@@ -837,17 +945,6 @@ let lastIndex,
   activeIndex = 0;
 
 scroll.on("active", function (index) {
-  // d3.selectAll(".step")
-  //   .each(function (d, i) {
-  //     d3.select(this).classed("z", i === index ? true : false);
-  //   })
-  //   .transition()
-  //   .duration(500)
-
-  //   .style("opacity", function (d, i) {
-  //     return this.classList.contains("ghost") ? 0 : i === index ? 1 : 0.1;
-  //   });
-
   activeIndex = index;
 
   // d3.select("#sections").classed("z", activeIndex % 2 !== 0);

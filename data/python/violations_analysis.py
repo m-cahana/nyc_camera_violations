@@ -66,7 +66,7 @@ def decreasing_step_quadratic(index, total_rows, max_step=500, min_step=100):
 
 # ----- data read-in -----
 
-violations_agg = pd.read_csv('../processed/parking_violations_agg_copy.csv')
+violations_agg = pd.read_csv('../processed/parking_violations_agg.csv')
 
 # ---- categorize ----- 
 red_light_agg = generate_shares(violations_agg, 7).rename(
@@ -122,31 +122,4 @@ merged.groupby('school_zone_violations_binned').agg(
     n = ('plate_id', 'count')).reset_index()
 
 
-# ---- individual lookup ----- 
 
-# resources:
-# - https://github.com/xmunoz/sodapy?tab=readme-ov-file#getdataset_identifier-content_typejson-kwargs
-# - https://dev.socrata.com/foundry/data.cityofnewyork.us/869v-vr48
-
-from constants import google_maps_api_key
-
-# Unauthenticated client only works with public data sets. 'None' in place of application token
-
-sample_plate = school_zone_agg[
-    school_zone_agg.school_zone_violations_binned == '51+'].plate_id.iloc[0]
-
-client = Socrata("data.cityofnewyork.us", None)
-
-results = pd.DataFrame.from_records(
-    client.get("869v-vr48", 
-               plate_id = sample_plate, 
-               violation_code = '36'))
-
-sample_address = (
-    results.iloc[0].street_name + 
-    results.iloc[0].intersecting_street + ' ' + 
-    results.iloc[0].violation_county  
-).replace('@', '&')
-
-gmaps = googlemaps.Client(key=google_maps_api_key)
-geocode_result = gmaps.geocode(sample_address)
