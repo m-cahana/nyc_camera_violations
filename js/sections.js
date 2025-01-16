@@ -670,8 +670,9 @@ function drawMapbox() {
   // Prepare GeoJSON points from mapDataset
   const geojson = {
     type: "FeatureCollection",
-    features: mapDataset.map((point) => ({
+    features: mapDataset.map((point, index) => ({
       type: "Feature",
+      id: index, // Assign a unique ID using the index
       geometry: {
         type: "Point",
         coordinates: [point.long, point.lat],
@@ -857,8 +858,8 @@ function drawMapbox() {
       paint: {
         "circle-radius": [
           "case",
-          ["boolean", ["feature-state", "highlight"], false],
-          12, // Radius when highlighted
+          ["boolean", ["feature-state", "hover"], false],
+          10, // Radius when hovered
           6, // Normal radius
         ],
         "circle-color": "#007cbf",
@@ -872,10 +873,21 @@ function drawMapbox() {
       closeOnClick: false, // Keeps the popup open until mouse leaves
     });
 
+    // Initialize a variable to keep track of the currently hovered feature
+    let featureId = null;
     // Add event listeners for hover interaction
     map.on("mouseenter", "filtered-points-layer", (e) => {
       // Change the cursor style to pointer
       map.getCanvas().style.cursor = "pointer";
+
+      // Get the feature ID
+      featureId = e.features[0].id;
+
+      // set hover state
+      map.setFeatureState(
+        { source: "filtered-points", id: featureId },
+        { hover: true }
+      );
 
       // Get the coordinates of the point
       const coordinates = e.features[0].geometry.coordinates.slice();
@@ -901,9 +913,17 @@ function drawMapbox() {
     });
 
     map.on("mouseleave", "filtered-points-layer", () => {
+      if (featureId !== null) {
+        // Reset the hover state
+        map.setFeatureState(
+          { source: "filtered-points", id: featureId },
+          { hover: false }
+        );
+      }
+      featureId = null;
+
       // Reset the cursor style
       map.getCanvas().style.cursor = "";
-
       // Remove the popup
       popup.remove();
     });
@@ -949,7 +969,7 @@ let activationFunctions = [
   () => {
     // a bit hacky, but need to include these hist functions to get draw borough packs
     // to behave consistently on up/down scrolls
-    drawHist(95, 100);
+    drawHist(99, 100);
     cleanHist(true);
     cleanBoroughPacks();
     showImage();
