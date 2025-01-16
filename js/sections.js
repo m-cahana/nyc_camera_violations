@@ -65,6 +65,45 @@ d3.csv("data/processed/repeat_offenders_lat_long_sample.csv").then((data) => {
   mapDataset.sort((a, b) => a.issue_dt - b.issue_dt);
 });
 
+function formatString(input) {
+  if (!input) return ""; // Handle null or undefined inputs
+
+  // Step 1: Replace all "@" with "&"
+  let replacedStr = input.replace(/@/g, "&");
+
+  // Step 2: Insert a space before and after each "&"
+  // This ensures that "&" is surrounded by spaces
+  // Use a regex to find "&" not already surrounded by spaces
+  replacedStr = replacedStr.replace(/&(?=\S)/g, " & ");
+  replacedStr = replacedStr.replace(/(?<=\S)&/g, " & ");
+
+  // Step 3: Remove any extra whitespace by replacing multiple spaces with a single space
+  replacedStr = replacedStr.replace(/\s+/g, " ").trim();
+
+  // Step 4: Split the string into words using spaces as separators
+  let words = replacedStr.split(" ");
+
+  // Step 5: Iterate over each word to format them
+  let formattedWords = words.map((word, index) => {
+    if (index === 0 && word.length === 2 && word !== "ST") {
+      // If it's the first word and has exactly two letters, capitalize both
+      return word.toUpperCase();
+    } else if (word.length > 0) {
+      // Capitalize the first letter and make the rest lowercase
+      // Do not alter "&"
+      return word === "&"
+        ? "&"
+        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    } else {
+      // If the word is an empty string (shouldn't occur due to trimming), return it as is
+      return word;
+    }
+  });
+
+  // Step 6: Join the formatted words back into a single string with spaces
+  return formattedWords.join(" ");
+}
+
 // Function to position the labels dynamically
 function positionLabels() {
   // Calculate current width and height from scales
@@ -679,6 +718,12 @@ function drawMapbox() {
       },
       properties: {
         date: point.issue_dt,
+        location:
+          point.street_name +
+          " " +
+          point.intersecting_street +
+          " " +
+          point.violation_county,
         plate_id: point.plate_id,
         issue_dt_ts: point.issue_dt, // Add timestamp for filtering
       },
@@ -899,7 +944,8 @@ function drawMapbox() {
       // Customize this based on the properties you have
       const popupContent = `
         <div class = "map-popup">
-          <strong>Date:</strong> ${new Date(props.date).toDateString()}
+          <strong>Date:</strong> ${new Date(props.date).toDateString()} <br>
+          <strong>Location:</strong> ${formatString(props.location)} 
         </div>
       `;
 

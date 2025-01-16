@@ -205,8 +205,8 @@ svg circle:hover {
   font-family: "Roboto";
 }
 
-.map-popup strong {
-  font-weight: 900px;
+strong {
+  font-weight: 450;
 }
 
 #date-display {
