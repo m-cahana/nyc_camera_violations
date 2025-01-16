@@ -24,9 +24,9 @@ const BOROUGH_TEXT = { width_padding: 10, height_padding: 10 };
 // change to boroughs eventually
 const boroughCategories = {
   Brooklyn: [0.15, 40],
-  Queens: [0.325, 35],
-  Manhattan: [0.5, 3],
-  Bronx: [0.675, 12],
+  Queens: [0.32, 35],
+  Manhattan: [0.495, 3],
+  Bronx: [0.665, 12],
   "Staten Island": [0.85, 10],
 };
 
@@ -753,7 +753,7 @@ function drawMapbox() {
     let timeoutId = null;
 
     // Define speeds
-    const animationSpeed = 200; // 200 ms per date
+    const animationSpeed = 5000; // 5 seconds per plate
 
     // Function to add a point and update the map
     function addPoints(currentDate) {
@@ -801,7 +801,7 @@ function drawMapbox() {
         if (!isPaused) {
           iterateDates();
         }
-      }, animationSpeed);
+      }, animationSpeed / selectedPlateDates.length);
     }
 
     // Public methods
@@ -898,8 +898,8 @@ function drawMapbox() {
       // Construct the HTML content for the popup
       // Customize this based on the properties you have
       const popupContent = `
-        <div style="font-size: 12px;">
-          <strong>Date:</strong> ${new Date(props.date).toDateString()}<br/>
+        <div class = "map-popup">
+          <strong>Date:</strong> ${new Date(props.date).toDateString()}
         </div>
       `;
 
@@ -935,9 +935,6 @@ function drawMapbox() {
     ]);
 
     adjustMapBounds(selectedPlateID);
-
-    // Start the animation
-    // AnimationController.start();
   });
 
   // Add navigation controls (optional)
