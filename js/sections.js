@@ -663,8 +663,6 @@ function drawBoroughPacks() {
     .duration(300)
     .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR * 1.5);
 
-  console.log(simulation.force);
-
   simulation.alpha(0.9).restart();
 
   svg.selectAll("g.borough-labels").style("visibility", "visible");
@@ -762,7 +760,6 @@ function drawMapbox() {
 
   // Function to load borough boundaries
   async function loadBoroughs() {
-    console.log("boroughs");
     const response = await fetch("data/raw/Borough Boundaries.geojson");
     if (!response.ok) {
       throw new Error("Failed to load borough boundaries.");
