@@ -11,25 +11,26 @@ let selectButton;
 let DOT_ADJUSTMENT_FACTOR = 1;
 let xTickCount, yTickCount;
 let ADJ_WIDTH, ADJ_HEIGHT;
-let boroughLabelsGroup;
+let showingHist = true;
 
 const MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
 let WIDTH = 800;
 let HEIGHT = 500;
-
 let HEIGHT_WIDTH_RATIO = HEIGHT / WIDTH;
-
 const DOT = { RADIUS: 5, OPACITY: 0.5 };
 const TICKS = { x: 50, y: 50 };
+const BOROUGH_TEXT = { width_padding: 10, height_padding: 10 };
 
 // change to boroughs eventually
 const boroughCategories = {
-  Brooklyn: 0.1,
-  Queens: 0.3,
-  Manhattan: 0.5,
-  Bronx: 0.7,
-  "Staten Island": 0.9,
+  Brooklyn: [0.15, 40],
+  Queens: [0.325, 35],
+  Manhattan: [0.5, 3],
+  Bronx: [0.675, 12],
+  "Staten Island": [0.85, 10],
 };
+
+const boroughNames = Object.keys(boroughCategories);
 
 import { scroller } from "./scroller.js";
 
@@ -95,20 +96,20 @@ function updateDimensions() {
   const container = document.getElementById("vis");
   const containerWidth = container.clientWidth;
 
-  const newWidth = Math.min(WIDTH, containerWidth);
-  const newHeight = newWidth * HEIGHT_WIDTH_RATIO;
+  ADJ_WIDTH = Math.min(WIDTH, containerWidth);
+  ADJ_HEIGHT = ADJ_WIDTH * HEIGHT_WIDTH_RATIO;
 
-  DOT_ADJUSTMENT_FACTOR = newWidth / WIDTH;
+  DOT_ADJUSTMENT_FACTOR = ADJ_WIDTH / WIDTH;
 
   // Update scales
-  cumXScale.range([MARGIN.LEFT, newWidth - MARGIN.RIGHT]);
-  cumYScale.range([newHeight - MARGIN.BOTTOM, MARGIN.TOP]);
+  cumXScale.range([MARGIN.LEFT, ADJ_WIDTH - MARGIN.RIGHT]);
+  cumYScale.range([ADJ_HEIGHT - MARGIN.BOTTOM, MARGIN.TOP]);
 
   // Determine dynamic tick counts
-  [xTickCount, yTickCount] = tickCounts(newWidth, newHeight);
+  [xTickCount, yTickCount] = tickCounts(ADJ_WIDTH, ADJ_HEIGHT);
 
   // update axes
-  xAxis.attr("transform", `translate(0,${newHeight - MARGIN.BOTTOM})`).call(
+  xAxis.attr("transform", `translate(0,${ADJ_HEIGHT - MARGIN.BOTTOM})`).call(
     d3
       .axisBottom(cumXScale)
       .tickFormat((d) => `${d}%`)
@@ -126,41 +127,84 @@ function updateDimensions() {
 
   // Update SVG size
   svg
-    .attr("width", newWidth + MARGIN.LEFT + MARGIN.RIGHT)
-    .attr("height", newHeight + MARGIN.TOP + MARGIN.BOTTOM);
+    .attr("width", ADJ_WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
+    .attr("height", ADJ_HEIGHT + MARGIN.TOP + MARGIN.BOTTOM);
 
-  nodes
-    .attr("cx", (d) => cumXScale(d.row_pct))
-    .attr("cy", (d) => cumYScale(d.cum_share))
-    .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR);
-
-  // Update the force simulation with new scales
   simulation
     .force("forceX", d3.forceX((d) => cumXScale(d.row_pct)).strength(0.075))
     .force("forceY", d3.forceY((d) => cumYScale(d.cum_share)).strength(0.075));
+  if (showingHist) {
+    nodes
+      .attr("cx", (d) => cumXScale(d.row_pct))
+      .attr("cy", (d) => cumYScale(d.cum_share))
+      .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR);
+  } else {
+    nodes.attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR * 1.5);
+    simulation
+      .force("charge", d3.forceManyBody().strength(0.1))
+      .force(
+        "forceX",
+        d3
+          .forceX((d) => boroughCategories[d.violation_borough][0] * ADJ_WIDTH)
+          .strength(0.1)
+      )
+      .force("forceY", d3.forceY(ADJ_HEIGHT / 2).strength(0.1))
+      .force("collide", d3.forceCollide(ADJ_WIDTH / 80 / 1.2));
+
+    simulation.alpha(0.9).restart();
+  }
 
   // Update image positions if necessary
   svg
     .select(".embedded-image")
-    .attr("x", newWidth / 2 - 50)
-    .attr("y", newHeight / 4)
+    .attr("x", ADJ_WIDTH / 2 - 50)
+    .attr("y", ADJ_HEIGHT / 4)
     .attr("transform", `rotate(0, ${WIDTH / 2}, ${HEIGHT / 2})`);
 
   svg
     .select(".image-group foreignObject")
-    .attr("x", newWidth / 2 - 100)
-    .attr("y", newHeight / 4 + 270);
+    .attr("x", ADJ_WIDTH / 2 - 100)
+    .attr("y", ADJ_HEIGHT / 4 + 270);
 
   svg
     .select(".map-foreignobject")
-    .attr("width", newWidth)
-    .attr("height", newHeight);
+    .attr("width", ADJ_WIDTH)
+    .attr("height", ADJ_HEIGHT);
 
   // update label positions
   svg
     .selectAll(".borough-label")
-    .attr("x", (d) => boroughCategories[d] * newWidth)
-    .attr("y", newHeight + MARGIN.BOTTOM + 20);
+    .attr(
+      "transform",
+      (d) =>
+        `translate(${boroughCategories[d][0] * ADJ_WIDTH}, ${ADJ_HEIGHT / 1.3})`
+    );
+
+  svg.selectAll(".borough-label").each(function (d) {
+    const g = d3.select(this);
+
+    // Update text attributes (e.g., font size)
+    g.select("text.label-text").attr(
+      "font-size",
+      `${12 * (ADJ_WIDTH / WIDTH)}px`
+    ); // Example scaling
+
+    // Update rectangle size based on updated text
+    const text = g.select("text.label-text");
+    const bbox = text.node().getBBox();
+
+    g.select("rect.label-rect")
+      .attr("x", bbox.x - BOROUGH_TEXT.width_padding * DOT_ADJUSTMENT_FACTOR)
+      .attr("y", bbox.y - BOROUGH_TEXT.height_padding * DOT_ADJUSTMENT_FACTOR)
+      .attr(
+        "width",
+        bbox.width + 2 * BOROUGH_TEXT.width_padding * DOT_ADJUSTMENT_FACTOR
+      )
+      .attr(
+        "height",
+        bbox.height + 2 * BOROUGH_TEXT.height_padding * DOT_ADJUSTMENT_FACTOR
+      );
+  });
 }
 
 // All the initial elements should be created in the drawInitial function
@@ -308,42 +352,42 @@ function drawInitial() {
   simulation.alpha(0.75).restart();
 
   // add labels for borough packs
-
-  boroughLabelsGroup = svg
-    .append("g")
-    .attr("class", "borough-labels")
-    .style("visibility", "hidden");
+  const boroughLabelsGroup = svg.append("g").attr("class", "borough-labels");
 
   boroughLabelsGroup
     .selectAll(".borough-label")
-    .data(Object.keys(boroughCategories))
+    .data(boroughNames)
     .enter()
     .append("g")
     .attr("class", "borough-label")
     .attr(
       "transform",
       (d) =>
-        `translate(${boroughCategories[d] * ADJ_WIDTH}, ${ADJ_HEIGHT / 1.3})`
+        `translate(${boroughCategories[d][0] * ADJ_WIDTH}, ${ADJ_HEIGHT / 1.3})`
     )
     .each(function (d) {
       const g = d3.select(this);
 
       // Append text
-      const text = g.append("text").text(d).attr("class", "label-text");
+      const text = g
+        .append("text")
+        .text(`${d} (${boroughCategories[d][1]}%)`)
+        .attr("class", "label-text");
 
       // Get the bounding box of the text
       const bbox = text.node().getBBox();
-      const width_padding = 20;
-      const height_padding = 10;
 
       // Append rectangle behind the text
       g.insert("rect", "text")
         .attr("class", "label-rect")
-        .attr("x", bbox.x - width_padding)
-        .attr("y", bbox.y - height_padding)
-        .attr("width", bbox.width + 2 * width_padding)
-        .attr("height", bbox.height + 2 * height_padding);
+        .attr("x", bbox.x - BOROUGH_TEXT.width_padding)
+        .attr("y", bbox.y - BOROUGH_TEXT.height_padding)
+        .attr("width", bbox.width + 2 * BOROUGH_TEXT.width_padding)
+        .attr("height", bbox.height + 2 * BOROUGH_TEXT.height_padding);
     });
+
+  // hide to start
+  svg.selectAll("g.borough-labels").style("visibility", "hidden");
 
   // Append the Mapbox foreignObject, positioned to the right of the dropdown
   svg
@@ -414,8 +458,8 @@ function drawInitial() {
   // Append the caption text beneath the image within the same group
   imageGroup
     .append("foreignObject")
-    .attr("x", ADJ_WIDTH / 2 + 100 - 100) // Adjust x as needed
-    .attr("y", ADJ_HEIGHT / 4 + 300 - 30) // Adjust y as needed
+    .attr("x", ADJ_WIDTH / 3) // Adjust x as needed
+    .attr("y", ADJ_HEIGHT / 4) // Adjust y as needed
     .attr("width", 200) // Adjust width as needed
     .attr("height", 50) // Adjust height as needed
     .style("pointer-events", "none") // Ensure it doesn't capture mouse events
@@ -442,16 +486,7 @@ function showImage() {
   imageGroup
     .transition()
     .duration(500) // Duration of the transition in milliseconds
-    .style("opacity", 1) // Fade in the group
-    .attrTween("transform", function () {
-      const cx = WIDTH / 2;
-      const cy = HEIGHT / 2;
-      // Interpolate rotation from 0 to 30 degrees around the center
-      return d3.interpolateString(
-        `rotate(0, ${cx}, ${cy})`,
-        `rotate(30, ${cx}, ${cy})`
-      );
-    });
+    .style("opacity", 1); // Fade in the group
 }
 
 // Function to hide and reset the image group
@@ -504,6 +539,7 @@ function regenerateAxes(data, nodes) {
 }
 
 function drawHist(xLower = 0, xHigher = 100) {
+  showingHist = true;
   const svg = d3.select("#vis").select("svg");
 
   svg.select(".x-label").style("display", "block");
@@ -521,8 +557,6 @@ function drawHist(xLower = 0, xHigher = 100) {
 
   // Regenerate axes based on the limited data
   regenerateAxes(limitedData);
-
-  //simulation.stop();
 
   simulation
     .on("tick", () => {
@@ -565,42 +599,46 @@ function cleanHist(keepNodes = false) {
 }
 
 function drawBoroughPacks() {
+  // display nodes
   const svg = d3.select("#vis").select("svg");
   svg.selectAll(".nodes").style("display", "block");
+  showingHist = false;
+
+  simulation
+    .force("charge", d3.forceManyBody().strength(0.1))
+    .force(
+      "forceX",
+      d3.forceX((d) => boroughCategories[d.violation_borough][0] * ADJ_WIDTH)
+    )
+    .force(
+      "forceY",
+      d3.forceY((d) => ADJ_HEIGHT / 2)
+    )
+    .force("collide", d3.forceCollide(ADJ_WIDTH / 80))
+    .alphaDecay(0.05);
+
+  simulation.alpha(0.9).restart();
 
   nodes
     .transition()
     .duration(300)
     .attr("r", DOT.RADIUS * DOT_ADJUSTMENT_FACTOR * 1.5);
 
-  simulation.alpha(2).restart();
-
-  simulation
-    .force("charge", d3.forceManyBody().strength(0.1))
-    .force(
-      "forceX",
-      d3.forceX((d) => boroughCategories[d.violation_borough] * ADJ_WIDTH)
-    )
-    .force(
-      "forceY",
-      d3.forceY((d) => ADJ_HEIGHT / 2)
-    )
-    .force("collide", d3.forceCollide(10))
-    .alphaDecay([0.05]);
+  console.log(simulation.force);
 
   simulation.alpha(0.9).restart();
 
-  boroughLabelsGroup.style("visibility", "visible");
+  svg.selectAll("g.borough-labels").style("visibility", "visible");
 }
 
-function cleanBoroughPacks() {
-  boroughLabelsGroup.style("visibility", "hidden");
+function cleanBoroughPacks(keepNodes = false) {
+  const svg = d3.select("#vis").select("svg");
+  svg.selectAll("g.borough-labels").style("visibility", "hidden");
+
+  if (!keepNodes) {
+    svg.selectAll(".nodes").style("display", "none");
+  }
 }
-
-// Function to draw the Mapbox map (as defined earlier)
-
-// Insert the drawMapbox function here or in another script tag
-// For clarity, include it here again:
 
 function drawMapbox() {
   // Show the foreignObject containing the map
@@ -626,6 +664,7 @@ function drawMapbox() {
     style: "mapbox://styles/mapbox/light-v11",
     center: [-74.006, 40.7128], // [lng, lat] of NYC
     zoom: 12,
+    attributionControl: false,
   });
 
   // Prepare GeoJSON points from mapDataset
@@ -713,7 +752,7 @@ function drawMapbox() {
     let timeoutId = null;
 
     // Define speeds
-    const animationSpeed = 100; // 100 ms per date
+    const animationSpeed = 200; // 200 ms per date
 
     // Function to add a point and update the map
     function addPoints(currentDate) {
@@ -738,16 +777,6 @@ function drawMapbox() {
       matchingFeatures.forEach((feature) => {
         map.setFeatureState({ source: "filtered-points" }, { highlight: true });
       });
-
-      // After a delay, remove the highlight to transition back to normal size
-      setTimeout(() => {
-        matchingFeatures.forEach((feature) => {
-          map.setFeatureState(
-            { source: "filtered-points" },
-            { highlight: false }
-          );
-        });
-      }, 1000); // Match this duration to 'circle-radius-transition.duration'
 
       d3.select("#map").select("#date-display").text(`Date: ${formattedDate}`);
     }
@@ -834,11 +863,6 @@ function drawMapbox() {
         ],
         "circle-color": "#007cbf",
         "circle-opacity": 0.8,
-        "circle-radius-transition": {
-          duration: 1000, // Transition duration in milliseconds
-          delay: 0,
-          type: "linear",
-        },
       },
     });
 
@@ -913,10 +937,9 @@ let activationFunctions = [
     hideMap();
   },
   () => {
-    drawHist(95, 100);
-    hideImage();
+    drawHist(99, 100);
     hideMap();
-    cleanBoroughPacks();
+    cleanBoroughPacks(true);
   },
   () => {
     cleanHist(true);
@@ -924,30 +947,28 @@ let activationFunctions = [
     drawBoroughPacks();
   },
   () => {
+    // a bit hacky, but need to include these hist functions to get draw borough packs
+    // to behave consistently on up/down scrolls
+    drawHist(95, 100);
+    cleanHist(true);
     cleanBoroughPacks();
     showImage();
-    cleanHist();
     hideMap();
   },
   () => {
     drawMapbox();
     hideImage();
-  }, // Newly added Mapbox function
+  },
 ];
 
-// All the scrolling functions
-// Will draw a new graph based on the index provided by the scroll
-
+// scroll
 let scroll = scroller().container(d3.select("#graphic"));
 scroll();
-
 let lastIndex,
   activeIndex = 0;
-
 scroll.on("active", function (index) {
   activeIndex = index;
 
-  // d3.select("#sections").classed("z", activeIndex % 2 !== 0);
   let sign = activeIndex - lastIndex < 0 ? -1 : 1;
   let scrolledSections = d3.range(lastIndex + sign, activeIndex + sign, sign);
 

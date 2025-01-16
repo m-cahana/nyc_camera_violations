@@ -64,6 +64,31 @@ def decreasing_step_quadratic(index, total_rows, max_step=500, min_step=100):
     
     return int(step)
 
+def stat_report(df, name):
+
+    print(f'report for {name}')
+
+    print(f"""
+        share of violations: 
+        {round(1 - df.cum_share.min(), 2)}
+        """)
+
+    print(f"""
+        minimum violations: 
+        {df.school_zone_violations.min()}
+        """)
+
+    print(f"""
+        total drivers: 
+        {df.plate_id.nunique()}
+        """)
+
+    print(f"""
+        total violations%: 
+        {df.school_zone_violations.sum()}
+        """)
+
+
 # ----- data read-in -----
 
 violations_agg = pd.read_csv('../processed/parking_violations_agg.csv')
@@ -102,6 +127,9 @@ while i < len(merged):
     step = decreasing_step_quadratic(i, len(merged), max_step=10000, min_step=1000)
     i += step
 
+# add in one tail end obs
+selected_indices.append(merged.iloc[-1].name)
+
 # Select rows based on calculated indices
 sparse_gradual_merged = merged.iloc[selected_indices]
 
@@ -121,5 +149,33 @@ merged.groupby('school_zone_violations_binned').agg(
     red_light_violations = ('red_light_violations', 'mean'), 
     n = ('plate_id', 'count')).reset_index()
 
+# ----- all stats -----
+
+stat_report(school_zone_agg, 'all drivers')
+
+# ----- top stats -----
+
+stat_report(school_zone_agg[school_zone_agg.row_pct >= 0.95], 'top 5% of drivers')
+
+stat_report(school_zone_agg[school_zone_agg.row_pct >= 0.98], 'top 2% of drivers')
+
+stat_report(school_zone_agg[school_zone_agg.row_pct >= 0.99], 'top 1% of drivers')
+
+# ----- borough breakdown -----
 
 
+print(f"""
+      boroughs for all drivers
+      {school_zone_agg.violation_borough.value_counts(normalize=True)}
+      """)
+
+
+print(f"""
+      boroughs for top 5%
+      {school_zone_agg[school_zone_agg.row_pct >= 0.95].violation_borough.value_counts(normalize=True)}
+      """)
+
+print(f"""
+      boroughs for top 1%
+      {school_zone_agg[school_zone_agg.row_pct >= 0.99].violation_borough.value_counts(normalize=True)}
+      """)
