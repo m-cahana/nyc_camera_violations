@@ -41,6 +41,7 @@ import { scroller } from "./scroller.js";
 d3.csv("data/processed/school_zone_violations_sparser.csv").then((data) => {
   data.forEach((d) => {
     d.row_pct = Number(d.row_pct * 100);
+    d.fines = Number(d.fines);
     d.cum_share = Number(d.cum_share * 100);
     d.school_zone_violations = Number(d.school_zone_violations);
   });
@@ -356,6 +357,8 @@ function drawInitial() {
            <strong>Main borough:</strong> ${d.violation_borough}
            <br>
            <strong>School zone violations:</strong> ${d.school_zone_violations}
+           <br>
+           <strong>Total fines:</strong> $${d.fines.toLocaleString()}
            `
           )
           .style("left", `${event.pageX + 10}px`) // Position tooltip near the mouse

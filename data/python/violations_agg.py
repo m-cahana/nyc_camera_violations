@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 # ----- functions -----
 def clean_cols(df):
@@ -78,6 +79,15 @@ all_chunks_boroughed = all_chunks.groupby(
 
 # add in code information
 all_chunks_boroughed = all_chunks_boroughed.merge(violation_codes, how = 'left', on = 'violation_code')
+
+# ----- compute fines paid -----
+
+# red lights and school zones get $50 fines wherever they are in the city
+all_chunks_boroughed['fines'] = np.where(
+    all_chunks_boroughed.violation_code.isin([36,7]), 
+    all_chunks_boroughed.all_other_fine * all_chunks_boroughed.violations,
+    np.nan
+)
 
 # ----- save output -----
 
