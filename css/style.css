@@ -6,6 +6,12 @@
   box-sizing: border-box; /* Ensures padding and borders are included in element's total width and height */
 }
 
+:root {
+  --primary-blue: rgb(56, 56, 241);
+  /* You can define more variables here */
+  --secondary-blue: rgb(102, 102, 230);
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -288,12 +294,12 @@ strong {
 
 .nodes {
   stroke: none; /* No stroke by default */
-  fill: rgb(56, 56, 241); /* Existing fill color */
+  fill: var(--primary-blue);
   transition: stroke 0.1s ease, stroke-width 0.1s ease; /* Smooth transitions */
 }
 
 .nodes.highlighted {
-  stroke: rgb(102, 102, 230);
+  stroke: var(--secondary-blue);
   stroke-width: 8;
 }
 
@@ -310,7 +316,7 @@ strong {
   vertical-align: super;
   font-size: 0.75em;
   margin-left: 2px;
-  color: blue;
+  color: var(--primary-blue);
   cursor: pointer;
 }
 
