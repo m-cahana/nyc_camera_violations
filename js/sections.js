@@ -707,8 +707,7 @@ function drawMapbox() {
   });
 
   // Initialize the Mapbox map
-  mapboxgl.accessToken =
-    "pk.eyJ1IjoibWljaGFlbC1jYWhhbmEiLCJhIjoiY201ZnhkcG05MDJleTJscHhhNm15MG1kZSJ9.X4X3JWIaV7ju9sBLZgDpHA";
+  mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
   map = new mapboxgl.Map({
     container: "map", // ID of the div in foreignObject
@@ -934,8 +933,8 @@ function drawMapbox() {
           10, // Radius when hovered
           6, // Normal radius
         ],
-        "circle-color": "#007cbf",
-        "circle-opacity": 0.8,
+        "circle-color": "rgb(56, 56, 241)",
+        "circle-opacity": DOT.OPACITY,
       },
     });
 

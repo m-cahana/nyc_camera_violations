@@ -2,6 +2,7 @@
 *.xlsx
 *.geojson
 **/constants.py
+/js/config.js
 
 /venv
 .vscode

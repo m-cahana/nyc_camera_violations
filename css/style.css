@@ -293,7 +293,7 @@ strong {
 }
 
 .nodes.highlighted {
-  stroke: purple;
+  stroke: rgb(102, 102, 230);
   stroke-width: 8;
 }
 
@@ -371,7 +371,7 @@ strong {
     text-align: center; /* Center the text content */
     border-width: 1px;
     border-style: solid;
-    background-color: rgb(239, 249, 247, 0.5);
+    background-color: rgba(255, 255, 255, 0.9);
     border-radius: 0px;
     padding: 20px;
   }
