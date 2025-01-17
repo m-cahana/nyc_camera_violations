@@ -20,6 +20,7 @@ let HEIGHT_WIDTH_RATIO = HEIGHT / WIDTH;
 const DOT = { RADIUS: 5, OPACITY: 0.5 };
 const TICKS = { x: 50, y: 50 };
 const BOROUGH_TEXT = { width_padding: 10, height_padding: 10 };
+const IMAGE = { WIDTH: 600, HEIGHT: 400, MARGIN: 15 };
 
 // change to boroughs eventually
 const boroughCategories = {
@@ -194,16 +195,23 @@ function updateDimensions() {
   }
 
   // Update image positions if necessary
-  svg
-    .select(".embedded-image")
-    .attr("x", ADJ_WIDTH / 2 - 50)
-    .attr("y", ADJ_HEIGHT / 4)
-    .attr("transform", `rotate(0, ${WIDTH / 2}, ${HEIGHT / 2})`);
+  const image = svg.select(".centered-image");
+
+  const x = (ADJ_WIDTH - IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2;
+  const y = (ADJ_HEIGHT - IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR) / 2;
+
+  image
+    .attr("x", x)
+    .attr("y", y)
+    .attr("width", IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR)
+    .attr("height", IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR);
 
   svg
-    .select(".image-group foreignObject")
-    .attr("x", ADJ_WIDTH / 2 - 100)
-    .attr("y", ADJ_HEIGHT / 4 + 270);
+    .select(".image-caption")
+    .attr("x", ADJ_WIDTH / 2) // Ensure centered horizontally
+    .attr("y", y + IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR + IMAGE.MARGIN) // Reposition below the image
+    .selectAll("tspan")
+    .attr("x", ADJ_WIDTH / 2);
 
   svg
     .select(".map-foreignobject")
@@ -476,39 +484,43 @@ function drawInitial() {
   // dropdown will be initialized to first element
   selectedPlateID = mapPlates[0];
 
-  const imageGroup = svg
-    .append("g")
-    .attr("class", "image-group") // Assign a class for easy selection
-    .style("opacity", 0) // Initially hidden
-    .style("pointer-events", "none");
+  const imageX = (ADJ_WIDTH - IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2;
+  const imageY = (ADJ_HEIGHT - IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR) / 2;
 
-  // Embed the PNG image within the group
-  imageGroup
+  const centerX = imageX + (IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2;
+  const captionY = imageY + IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR + IMAGE.MARGIN;
+
+  svg
     .append("image")
-    .attr("href", "images/crash-car-1.png") // Replace with your PNG path
-    .attr("x", ADJ_WIDTH / 2 - 50) // Adjust x position
-    .attr("y", ADJ_HEIGHT / 4) // Adjust y position
-    .attr("width", 300) // Adjust width
-    .attr("height", 300) // Adjust height
-    .attr("class", "embedded-image") // Assign a class for styling
-    // Initial rotation set to 0 degrees
-    .attr("transform", `rotate(0, ${ADJ_WIDTH / 2}, ${ADJ_HEIGHT / 2})`);
+    .attr("class", "centered-image") // Assign a class for easy selection
+    .attr("href", "images/crash-car-1.png") // Path to your PNG image
+    .attr("x", imageX)
+    .attr("y", imageY)
+    .attr("width", IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR)
+    .attr("height", IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR)
+    .attr("opacity", 0);
 
-  // Append the caption text beneath the image within the same group
-  imageGroup
-    .append("foreignObject")
-    .attr("x", ADJ_WIDTH / 3) // Adjust x as needed
-    .attr("y", ADJ_HEIGHT / 4) // Adjust y as needed
-    .attr("width", 200) // Adjust width as needed
-    .attr("height", 50) // Adjust height as needed
-    .style("pointer-events", "none") // Ensure it doesn't capture mouse events
-    .append("xhtml:div") // Must use XHTML namespace
-    .style("text-align", "center") // Center text
-    .style("font-size", "12px")
-    .style("color", "black")
-    .html(
-      "<span>Repeat offender crash in 2021</span><br/><span>Photo by Liam Quiqley</span>"
-    );
+  const caption = svg
+    .append("text")
+    .attr("class", "image-caption")
+    .attr("text-anchor", "middle") // Center the text horizontally
+    .attr("x", centerX)
+    .attr("y", captionY)
+    .attr("opacity", 0); // Start hidden
+
+  // Append first line of caption
+  caption
+    .append("tspan")
+    .attr("x", ADJ_WIDTH / 2) // Ensure centered
+    .attr("dy", "0em") // Align to the initial y
+    .text("Repeat offender crash in 2021");
+
+  // Append second line of caption
+  caption
+    .append("tspan")
+    .attr("x", ADJ_WIDTH / 2) // Ensure centered
+    .attr("dy", "1.2em") // 1.2em below the previous line
+    .text("Photo by Liam Quiqley");
 
   // update dimensions on the jump
   updateDimensions();
@@ -518,25 +530,27 @@ function drawInitial() {
   window.addEventListener("resize", updateDimensions);
 }
 
-// Function to show and rotate the image group
 function showImage() {
-  const imageGroup = d3.select(".image-group");
-
-  imageGroup
+  const svg = d3.select("#vis").select("svg");
+  svg
+    .selectAll(".centered-image")
     .transition()
-    .duration(500) // Duration of the transition in milliseconds
-    .style("opacity", 1); // Fade in the group
+    .duration(250)
+    .attr("opacity", 1);
+
+  svg.select(".image-caption").transition().duration(500).attr("opacity", 1);
 }
 
 // Function to hide and reset the image group
 function hideImage() {
-  const imageGroup = d3.select(".image-group");
-
-  imageGroup
+  const svg = d3.select("#vis").select("svg");
+  svg
+    .selectAll(".centered-image")
     .transition()
-    .duration(500) // Duration of the transition in milliseconds
-    .style("opacity", 0) // Fade out the group
-    .attr("transform", `rotate(0, ${WIDTH / 2}, ${HEIGHT / 2})`); // Reset rotation
+    .duration(250)
+    .attr("opacity", 0);
+
+  svg.select(".image-caption").transition().duration(500).attr("opacity", 0);
 }
 
 function hideMap() {
@@ -754,6 +768,22 @@ function drawMapbox() {
       duration: 1000, // Duration in milliseconds for the animation
       essential: true, // This ensures the animation is not affected by user preferences
     });
+
+    // disable zoom interactions
+    map.scrollZoom.disable();
+    map.doubleClickZoom.disable();
+    map.boxZoom.disable();
+    map.dragRotate.disable();
+    map.keyboard.disable();
+
+    // Re-enable zoom interactions after 5 seconds
+    setTimeout(() => {
+      map.scrollZoom.enable();
+      map.doubleClickZoom.enable();
+      map.boxZoom.enable();
+      map.dragRotate.enable();
+      map.keyboard.enable();
+    }, 5000); // 5000 milliseconds = 5 seconds
 
     AnimationController.start();
   }

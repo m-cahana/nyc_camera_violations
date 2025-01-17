@@ -77,6 +77,7 @@ body.loading {
   max-width: 100%;
   margin: 0 auto;
   z-index: 10;
+  position: relative;
 }
 
 #sections {
@@ -101,7 +102,7 @@ svg {
 #vis {
   display: block;
   position: fixed;
-  z-index: 1;
+  z-index: 10;
   height: auto;
   width: 100%;
   max-width: 1000px;
@@ -144,16 +145,6 @@ svg {
   z-index: -1;
 }
 
-.image-group {
-  z-index: 10;
-  position: relative;
-}
-
-image {
-  z-index: 10;
-  position: relative;
-}
-
 .tick line {
   stroke: "red";
 }
@@ -182,13 +173,12 @@ image {
   width: 800px;
   height: 500px;
   display: none; /* Hidden by default */
-  z-index: 2; /* Above SVG */
+  z-index: 11; /* Above SVG */
 }
 
 #map {
   width: 100%;
   height: 100%;
-  margin-left: 40px;
 }
 
 svg circle:hover {
@@ -345,12 +335,28 @@ strong {
   text-anchor: middle;
 }
 
-/* Responsive Adjustments */
+.centered-image {
+  z-index: 0;
+  position: relative;
+  pointer-events: none;
+}
+
+.image-caption {
+  font-size: 14px;
+  fill: black;
+}
+
 @media screen and (min-width: 1100px) {
-  #vis {
-    top: 0px;
-    z-index: 1;
-    margin-left: 200px;
+  .map-foreignobject {
+    transform: translateX(40px); /* Shift right by 20px */
+    width: calc(100% - 40px); /* Reduce width by 20px */
+    box-sizing: border-box; /* Ensure padding and borders are included in size */
+    z-index: 5; /* Adjust z-index if necessary */
+  }
+
+  #map {
+    width: calc(100% - 40px); /* Match the reduced width */
+    height: 100%; /* Maintain full height */
   }
 }
 
@@ -378,6 +384,7 @@ strong {
     flex: 1;
     max-width: 400px;
     width: 100%;
+    margin-right: 0px;
   }
 
   #vis-container {
@@ -429,11 +436,6 @@ strong {
     justify-content: center; /* Center the #map div horizontally within foreignObject */
     align-items: center; /* Center the #map div vertically within foreignObject */
   }
-
-  .image-group {
-    justify-content: center; /* Centers items horizontally */
-    width: 100%; /* Ensures it takes full width of its container */
-  }
 }
 
 /* smaller screens */
@@ -460,6 +462,11 @@ strong {
 
   .label-text {
     font-size: 10px;
+  }
+
+  .image-caption {
+    font-size: 12px;
+    fill: black;
   }
 }
 
