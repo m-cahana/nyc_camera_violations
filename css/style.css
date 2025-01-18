@@ -409,7 +409,8 @@ strong {
   }
 
   #vis {
-    margin-left: 0; /* Remove left margin */
+    margin-left: 0;
+    margin-right: 0;
     left: 50%; /* Position left edge at 50% of viewport width */
     transform: translateX(-50%); /* Shift left by 50% of #vis's width */
     width: 90%; /* Adjust width for better fit on small screens */
@@ -422,12 +423,10 @@ strong {
   }
 
   #vis.static {
-    position: relative;
-    margin-left: 0;
-    width: 90%; /* Adjust width for better fit on small screens */
-    max-width: 800px; /* Ensure max-width doesn't exceed desired size */
-    left: 50%; /* Remove left positioning if necessary */
-    transform: translateX(-50%); /* Remove if not needed */
+    width: 100%; /* or another desired width */
+    max-width: none; /* Remove max-width if necessary */
+    left: 0; /* Adjust positioning as needed */
+    transform: none; /* Remove translation to prevent shifting */
   }
 
   #map-container {
