@@ -60,8 +60,14 @@ d3.csv("data/processed/repeat_offenders_lat_long_sample.csv").then((data) => {
     d.issue_dt = new Date(d.issue_dt);
   });
 
+  // Filter out entries with invalid coordinates
   mapDataset = data.filter((d) => d.lat != 0 && d.long != 0);
-  mapPlates = [...new Set(data.map((d) => d.plate_id))];
+
+  // Extract unique plate_ids
+  const uniquePlates = Array.from(new Set(data.map((d) => d.plate_id)));
+
+  // Ensure "HSD2664" is at the top
+  mapPlates = ["HSD2664", ...uniquePlates.filter((id) => id !== "HSD2664")];
 
   // Sort the dataset by date for efficient processing
   mapDataset.sort((a, b) => a.issue_dt - b.issue_dt);
@@ -516,7 +522,7 @@ function drawInitial() {
     .append("tspan")
     .attr("x", ADJ_WIDTH / 2) // Ensure centered
     .attr("dy", "0em") // Align to the initial y
-    .text("Repeat offender crash in 2021");
+    .text("Top offender crash in Fort Greene, Brooklyn, in 2021");
 
   // Append second line of caption
   caption
@@ -659,6 +665,16 @@ function drawBoroughPacks() {
   const svg = d3.select("#vis").select("svg");
   svg.selectAll(".nodes").style("display", "block");
   showingHist = false;
+
+  // Filter the borough packs to include only a subset of nodes
+  const limitedData = histDataset.filter((d) => {
+    return d.row_pct >= 99 && d.row_pct <= 100;
+  });
+
+  nodes
+    .transition()
+    .duration(500)
+    .attr("opacity", (d) => (limitedData.includes(d) ? DOT.OPACITY : 0)); // Semi-transparent for others
 
   simulation
     .force("charge", d3.forceManyBody().strength(0.1))
