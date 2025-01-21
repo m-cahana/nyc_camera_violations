@@ -666,16 +666,6 @@ function drawBoroughPacks() {
   svg.selectAll(".nodes").style("display", "block");
   showingHist = false;
 
-  // Filter the borough packs to include only a subset of nodes
-  const limitedData = histDataset.filter((d) => {
-    return d.row_pct >= 99 && d.row_pct <= 100;
-  });
-
-  nodes
-    .transition()
-    .duration(500)
-    .attr("opacity", (d) => (limitedData.includes(d) ? DOT.OPACITY : 0)); // Semi-transparent for others
-
   simulation
     .force("charge", d3.forceManyBody().strength(0.1))
     .force(
