@@ -725,7 +725,7 @@ function drawMapbox() {
     container: "map", // ID of the div in foreignObject
     style: "mapbox://styles/mapbox/light-v11",
     center: [-74.006, 40.7128], // [lng, lat] of NYC
-    zoom: 12,
+    zoom: 12 * DOT_ADJUSTMENT_FACTOR, // zoom level
     attributionControl: false,
   });
 
@@ -775,7 +775,7 @@ function drawMapbox() {
 
     // fit the map to the calculated bounds with padding
     map.fitBounds(bounds, {
-      padding: 100,
+      padding: 100 * DOT_ADJUSTMENT_FACTOR,
       duration: 1000, // duration in milliseconds for the animation
       essential: true, // ensure animation is not affected by user preferences
     });
