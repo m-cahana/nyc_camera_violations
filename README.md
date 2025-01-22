@@ -1,7 +1,7 @@
 ### New York City School Zone Violations
 
 A look into the distribution of school zone violations in New York City, and the tail-end of drivers
-who contribute a significant share of violations despite being relatively small in number. 
+who contribute a significant share of violations despite being relatively small in number. Check it out here: https://m-cahana.github.io/nyc_camera_violations/
 
 
 This project uses Python for data processing, and D3 and Mapbox for visualization. 
