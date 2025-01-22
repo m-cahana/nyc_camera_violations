@@ -443,3 +443,10 @@ strong {
     font-size: 14px;
   }
 }
+
+/* even smaller  */
+@media screen and (max-width: 500px) {
+  .label-text {
+    font-size: 8px;
+  }
+}
