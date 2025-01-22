@@ -718,7 +718,8 @@ function drawMapbox() {
   });
 
   // initialize the Mapbox map
-  mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+  mapboxgl.accessToken =
+    "pk.eyJ1IjoibWljaGFlbC1jYWhhbmEiLCJhIjoiY201ZnhkcG05MDJleTJscHhhNm15MG1kZSJ9.X4X3JWIaV7ju9sBLZgDpHA";
 
   map = new mapboxgl.Map({
     container: "map", // ID of the div in foreignObject

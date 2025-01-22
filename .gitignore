@@ -2,7 +2,6 @@
 **/school_zone_violations.csv
 **/parking_violations_agg.csv
 **/constants.py
-/js/config.js
 
 /venv
 .vscode
