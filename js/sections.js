@@ -1041,7 +1041,7 @@ let activationFunctions = [
     hideMap();
   },
   () => {
-    drawCumDist(99, 100);
+    drawCumDist(98.9, 100);
     hideMap();
     cleanBoroughPacks(true);
   },
@@ -1053,7 +1053,7 @@ let activationFunctions = [
   () => {
     // a bit hacky, but need to include these cum dist functions to get draw borough packs
     // to behave consistently on up/down scrolls
-    drawCumDist(99, 100);
+    drawCumDist(98.9, 100);
     cleanCumDist(true);
     cleanBoroughPacks();
     showImage();
