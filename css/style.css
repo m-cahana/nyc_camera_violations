@@ -3,12 +3,11 @@
 @import url("https://fonts.googleapis.com/css?family=Domine:400,700&display=swap");
 
 * {
-  box-sizing: border-box; /* Ensures padding and borders are included in element's total width and height */
+  box-sizing: border-box;
 }
 
 :root {
   --primary-blue: rgb(56, 56, 241);
-  /* You can define more variables here */
   --secondary-blue: rgb(102, 102, 230);
 }
 
@@ -22,50 +21,6 @@ body {
   overflow-x: hidden;
 }
 
-/* #main-content {
-  display: flex;
-  flex-direction: column;
-} */
-
-/* Loader Overlay */
-#loader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ffffff; /* Background color of the loader */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999; /* Ensure the loader stays on top */
-  transition: opacity 1s ease; /* Smooth fade-out transition */
-}
-
-/* Spinner Design */
-.spinner {
-  width: 80px;
-  height: 80px;
-  border: 6px solid #f3f3f3; /* Light grey border */
-  border-top: 6px solid #3498db; /* Blue border on top */
-  border-radius: 50%;
-  animation: spin 1.5s linear infinite; /* Spin animation */
-}
-
-/* Spinner Animation */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Optional: Prevent scrolling while loading */
-body.loading {
-  overflow: hidden;
-}
 #footer {
   border-top: solid;
   padding-right: 10px;
@@ -98,9 +53,9 @@ body.loading {
 svg {
   z-index: 100;
 }
+
 #vis-container {
-  position: relative; /* Positioned ancestor for absolute positioning */
-  /* Ensure the container spans the full viewport height if needed */
+  position: relative;
   min-height: 93vh;
   z-index: 10;
 }
@@ -116,13 +71,10 @@ svg {
   margin-left: 200px;
   top: 0px;
 }
+
 /* static class */
 #vis.static {
   position: absolute;
-}
-
-.categoryLegend {
-  font-family: "Domine";
 }
 
 .step {
@@ -133,11 +85,11 @@ svg {
   max-width: 700px;
   z-index: 101;
   position: relative;
-  width: 90%; /* Adjust as needed */
+  width: 90%;
 }
 
 .step:not(.ghost) {
-  min-height: auto; /* Allows height to adjust based on content */
+  min-height: auto; /* allows height to adjust based on content */
 }
 
 .step.z {
@@ -161,13 +113,12 @@ svg {
   border: 0.5px solid black;
   padding: 5px;
   pointer-events: all;
-  opacity: 0; /* Hidden by default */
-  transition: opacity 0.3s ease; /* Smooth fade-in and fade-out */
-  z-index: 99; /* Ensure tooltip appears above other elements */
+  opacity: 0; /* hidden by default */
+  transition: opacity 0.3s ease; /* smooth fade-in and fade-out */
+  z-index: 99; /* ensure tooltip appears above other elements */
   font-size: 12px;
 }
 
-/* Tooltip Visible State */
 .tooltip.visible {
   opacity: 1;
 }
@@ -178,8 +129,8 @@ svg {
   left: 0;
   width: 800px;
   height: 500px;
-  display: none; /* Hidden by default */
-  z-index: 11; /* Above SVG */
+  display: none; /* hidden by default */
+  z-index: 11; /* above SVG */
 }
 
 #map {
@@ -191,12 +142,11 @@ svg circle:hover {
   cursor: pointer;
 }
 
-/* Class to hide elements */
+/* class to hide elements */
 .hidden {
   display: none;
 }
 
-/* Style the custom content wrapper */
 .map-popup {
   font-family: "Roboto";
 }
@@ -215,25 +165,23 @@ strong {
   font-size: 14px;
   color: #333;
   pointer-events: none;
-  z-index: 10; /* Ensure it appears above the map */
+  z-index: 10; /* ensure it appears above the map */
 }
 
-/* Wrapper for selectButton */
 #select-wrapper {
   position: absolute;
   top: 10px;
-  left: 150px; /* Adjust based on date-display width */
+  left: 150px;
   background-color: rgba(255, 255, 255, 0.8);
   padding: 5px 10px;
   border-radius: 4px;
   font-size: 14px;
   color: #333;
-  z-index: 10; /* Ensures it stays above the map */
+  z-index: 10;
 }
 
-/* Styles for selectButton */
 #selectButton {
-  width: 200px; /* Adjust as needed */
+  width: 200px;
   padding: 0px 0px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -243,33 +191,30 @@ strong {
   z-index: 2;
 }
 
-/* Hover effect for selectButton */
 #selectButton:hover {
   border-color: #999;
 }
 
-/* Styling for the X-axis label */
 .x-label,
 .y-label {
   font-size: 16px;
   text-anchor: middle;
-  fill: #000; /* Optional: Set text color */
-  /* Add any other desired styles */
+  fill: #000;
 }
 
 .x-axis .tick text,
 .y-axis .tick text {
-  font-family: "Roboto", sans-serif; /* Specify your desired font */
-  font-size: 12px; /* Set your desired font size */
+  font-family: "Roboto", sans-serif;
+  font-size: 12px;
   font-style: bold;
-  fill: #555; /* Optional: Set text color */
+  fill: #555;
 }
 
 .x-axis path,
 .y-axis path,
 .x-axis line,
 .y-axis line {
-  stroke: #ccc; /* Set axis line color */
+  stroke: #ccc;
 }
 .title {
   font-size: 20px;
@@ -302,9 +247,9 @@ strong {
 }
 
 .nodes {
-  stroke: none; /* No stroke by default */
+  stroke: none;
   fill: var(--primary-blue);
-  transition: stroke 0.1s ease, stroke-width 0.1s ease; /* Smooth transitions */
+  transition: stroke 0.1s ease, stroke-width 0.1s ease;
 }
 
 .nodes.highlighted {
@@ -313,11 +258,11 @@ strong {
 }
 
 [aria-describedby="footnote-label"] {
-  counter-increment: footnotes; /* 1 */
-  text-decoration: none; /* 2 */
-  color: inherit; /* 2 */
-  cursor: default; /* 2 */
-  outline: none; /* 2 */
+  counter-increment: footnotes;
+  text-decoration: none;
+  color: inherit;
+  cursor: default;
+  outline: none;
 }
 
 [aria-describedby="footnote-label"]::after {
@@ -361,17 +306,18 @@ strong {
   fill: black;
 }
 
+/* large screens */
 @media screen and (min-width: 1100px) {
   .map-foreignobject {
-    transform: translateX(40px); /* Shift right by 20px */
-    width: calc(100% - 40px); /* Reduce width by 20px */
-    box-sizing: border-box; /* Ensure padding and borders are included in size */
-    z-index: 5; /* Adjust z-index if necessary */
+    transform: translateX(40px); /* shift right */
+    width: calc(100% - 40px); /* reduce width */
+    box-sizing: border-box;
+    z-index: 5;
   }
 
   #map {
-    width: calc(100% - 40px); /* Match the reduced width */
-    height: 100%; /* Maintain full height */
+    width: calc(100% - 40px); /* match the reduced width */
+    height: 100%; /* maintain full height */
     width: 800px;
     height: 500px;
   }
@@ -380,10 +326,10 @@ strong {
 /* smaller screens */
 @media screen and (max-width: 1099px) {
   .step {
-    width: 90%; /* Slightly less than 100% for margins */
-    max-width: 700px; /* Maintain a max-width for better readability */
-    margin: 0px auto; /* Center horizontally and add vertical spacing */
-    text-align: center; /* Center the text content */
+    width: 90%; /* slightly less than 100% for margins */
+    max-width: 700px; /* maintain a max-width for better readability */
+    margin: 0px auto; /* center horizontally and add vertical spacing */
+    text-align: center; /* center the text content */
     border-width: 1px;
     border-style: solid;
     background-color: rgba(255, 255, 255, 0.9);
@@ -393,7 +339,7 @@ strong {
 
   #graphic {
     display: flex;
-    flex-direction: column; /* Side by side on large screens */
+    flex-direction: column; /* side by side on large screens */
     align-items: center;
   }
 
@@ -405,13 +351,13 @@ strong {
   }
 
   #vis-container {
-    display: flex; /* Ensure it's a flex container */
-    align-items: center; /* Vertical centering */
-    justify-content: center; /* Horizontal centering */
-    width: 100%; /* Full width */
-    max-width: 800px; /* Adjust as needed */
-    margin: 0 auto; /* Center the container horizontally */
-    padding: 0; /* Remove any padding */
+    display: flex; /* ensure it's a flex container */
+    align-items: center; /* vertical centering */
+    justify-content: center; /* horizontal centering */
+    width: 100%; /* full width */
+    max-width: 800px;
+    margin: 0 auto; /* center the container horizontally */
+    padding: 0; /* remove any padding */
     min-height: 93vh;
     position: relative;
     z-index: 10;
@@ -420,22 +366,22 @@ strong {
   #vis {
     margin-left: 0;
     margin-right: 0;
-    left: 50%; /* Position left edge at 50% of viewport width */
-    transform: translateX(-50%); /* Shift left by 50% of #vis's width */
-    width: 90%; /* Adjust width for better fit on small screens */
-    max-width: 800px; /* Optional: Set a smaller max-width */
+    left: 50%; /* position left edge at 50% of viewport width */
+    transform: translateX(-50%); /* shift left by 50% of #vis's width */
+    width: 90%; /* adjust width for better fit on small screens */
+    max-width: 800px;
   }
 
   #vis svg {
-    width: 100%; /* Makes the SVG take the full width of its container */
-    margin: 0 auto; /* Centers the SVG within its container */
+    width: 100%;
+    margin: 0 auto;
   }
 
   #vis.static {
-    width: 100%; /* or another desired width */
-    max-width: none; /* Remove max-width if necessary */
-    left: 0; /* Adjust positioning as needed */
-    transform: none; /* Remove translation to prevent shifting */
+    width: 100%;
+    max-width: none;
+    left: 0;
+    transform: none;
   }
 
   #map-container {
@@ -446,16 +392,14 @@ strong {
     height: auto;
   }
 
-  /* Style for the map foreignObject */
   .map-foreignobject {
     display: flex;
-    justify-content: center; /* Center the #map div horizontally within foreignObject */
-    align-items: center; /* Center the #map div vertically within foreignObject */
+    justify-content: center;
+    align-items: center;
   }
 }
 
-/* smaller screens */
-
+/* even smaller screens */
 @media screen and (max-width: 800px) {
   #sections {
     flex: 1;
@@ -486,16 +430,8 @@ strong {
   }
 }
 
+/* even smaller  */
 @media screen and (max-width: 600px) {
-  /* body {
-    font-size: 10px;
-  }
-
-  .title {
-    font-size: 12px;
-    margin-bottom: 2px;
-  } */
-
   #sections {
     flex: 1;
     max-width: 275px;

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sodapy import Socrata
 import googlemaps
+# import API key from uncommited file
 from constants import google_maps_api_key
 
 # ----- functions -----

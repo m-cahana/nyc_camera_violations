@@ -1,4 +1,4 @@
-let histDataset, mapDataset, mapPlates;
+let distDataset, mapDataset, mapPlates;
 let svg, g;
 let xLabel, yLabel;
 let plates, selectedPlateDates;
@@ -22,7 +22,6 @@ const TICKS = { x: 50, y: 50 };
 const BOROUGH_TEXT = { width_padding: 10, height_padding: 10 };
 const IMAGE = { WIDTH: 600, HEIGHT: 400, MARGIN: 15 };
 
-// change to boroughs eventually
 const boroughCategories = {
   Brooklyn: [0.15, 40],
   Queens: [0.32, 35],
@@ -35,9 +34,9 @@ const boroughNames = Object.keys(boroughCategories);
 
 import { scroller } from "./scroller.js";
 
-// Read Data, convert numerical categories into floats
-// Create the initial visualisation
-
+// *******************
+// read data
+// *******************
 d3.csv("data/processed/school_zone_violations_sparser.csv").then((data) => {
   data.forEach((d) => {
     d.row_pct = Number(d.row_pct * 100);
@@ -46,13 +45,12 @@ d3.csv("data/processed/school_zone_violations_sparser.csv").then((data) => {
     d.school_zone_violations = Number(d.school_zone_violations);
   });
 
-  histDataset = data;
-  plates = histDataset.map((d) => d.plate_id);
+  distDataset = data;
+  plates = distDataset.map((d) => d.plate_id);
 
-  setTimeout(drawInitial, 100); // Corrected to pass function without invoking
+  setTimeout(drawInitial, 100);
 });
 
-// read
 d3.csv("data/processed/repeat_offenders_lat_long_sample.csv").then((data) => {
   data.forEach((d) => {
     d.lat = Number(d.lat);
@@ -60,77 +58,82 @@ d3.csv("data/processed/repeat_offenders_lat_long_sample.csv").then((data) => {
     d.issue_dt = new Date(d.issue_dt);
   });
 
-  // Filter out entries with invalid coordinates
+  // vilter out entries with invalid coordinates
   mapDataset = data.filter((d) => d.lat != 0 && d.long != 0);
 
-  // Extract unique plate_ids
+  // extract unique plate_ids
   const uniquePlates = Array.from(new Set(data.map((d) => d.plate_id)));
 
   // Ensure "HSD2664" is at the top
   mapPlates = ["HSD2664", ...uniquePlates.filter((id) => id !== "HSD2664")];
 
-  // Sort the dataset by date for efficient processing
   mapDataset.sort((a, b) => a.issue_dt - b.issue_dt);
 });
 
-function formatString(input) {
+// *******************
+// functions
+// *******************
+
+// function to format string
+export function formatString(input) {
   if (!input) return ""; // Handle null or undefined inputs
 
-  // Step 1: Replace all "@" with "&"
+  // replace all "@" with "&"
   let replacedStr = input.replace(/@/g, "&");
 
-  // Step 2: Insert a space before and after each "&"
-  // This ensures that "&" is surrounded by spaces
-  // Use a regex to find "&" not already surrounded by spaces
+  // insert a space before and after each "&"
+  // this ensures that "&" is surrounded by spaces
+  // use a regex to find "&" not already surrounded by spaces
   replacedStr = replacedStr.replace(/&(?=\S)/g, " & ");
   replacedStr = replacedStr.replace(/(?<=\S)&/g, " & ");
 
-  // Step 3: Remove any extra whitespace by replacing multiple spaces with a single space
+  // remove any extra whitespace by replacing multiple spaces with a single space
   replacedStr = replacedStr.replace(/\s+/g, " ").trim();
 
-  // Step 4: Split the string into words using spaces as separators
+  // split the string into words using spaces as separators
   let words = replacedStr.split(" ");
 
-  // Step 5: Iterate over each word to format them
+  // iterate over each word to format them
   let formattedWords = words.map((word, index) => {
     if (index === 0 && word.length === 2 && word !== "ST") {
-      // If it's the first word and has exactly two letters, capitalize both
+      // if it's the first word and has exactly two letters, capitalize both
       return word.toUpperCase();
     } else if (word.length > 0) {
-      // Capitalize the first letter and make the rest lowercase
-      // Do not alter "&"
+      // capitalize the first letter and make the rest lowercase
+      // do not alter "&"
       return word === "&"
         ? "&"
         : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     } else {
-      // If the word is an empty string (shouldn't occur due to trimming), return it as is
+      // if the word is an empty string (shouldn't occur due to trimming), return it as is
       return word;
     }
   });
 
-  // Step 6: Join the formatted words back into a single string with spaces
+  // join the formatted words back into a single string with spaces
   return formattedWords.join(" ");
 }
 
-// Function to position the labels dynamically
+// function to position the labels dynamically
 function positionLabels() {
-  // Calculate current width and height from scales
+  // calculate current width and height from scales
   const currentWidth = cumXScale.range()[1] - cumXScale.range()[0];
   const currentHeight = cumYScale.range()[0] - cumYScale.range()[1];
 
-  // Position X Label: centered horizontally, slightly below the X axis
+  // position X Label: centered horizontally, slightly below the X axis
   xLabel
     .attr("x", (cumXScale.range()[0] + cumXScale.range()[1]) / 2)
     .attr("y", cumYScale.range()[0] + 30)
-    .attr("dy", "0.71em"); // Fine-tune vertical alignment
+    .attr("dy", "0.71em");
 
-  // Position Y Label: centered vertically, slightly left of the Y axis
+  // position Y Label: centered vertically, slightly left of the Y axis
   yLabel
     .attr("x", -(cumYScale.range()[0] + cumYScale.range()[1]) / 2)
     .attr("y", MARGIN.LEFT - 50)
-    .attr("dy", "0.71em"); // Fine-tune horizontal alignment
+    .attr("dy", "0.71em");
 }
 
+// dynamically estimate nunmber of ticks to show
 function tickCounts(width, height) {
   const x = Math.floor((width - MARGIN.LEFT - MARGIN.RIGHT) / TICKS.x);
   const y = Math.floor((height - MARGIN.TOP - MARGIN.BOTTOM) / TICKS.y);
@@ -138,7 +141,7 @@ function tickCounts(width, height) {
   return [x, y];
 }
 
-// Function to update dimensions based on container size
+// function to update dimensions based on container size
 function updateDimensions() {
   const container = document.getElementById("vis");
   const containerWidth = container.clientWidth;
@@ -148,11 +151,11 @@ function updateDimensions() {
 
   DOT_ADJUSTMENT_FACTOR = ADJ_WIDTH / WIDTH;
 
-  // Update scales
+  // update scales
   cumXScale.range([MARGIN.LEFT, ADJ_WIDTH - MARGIN.RIGHT]);
   cumYScale.range([ADJ_HEIGHT - MARGIN.BOTTOM, MARGIN.TOP]);
 
-  // Determine dynamic tick counts
+  // determine dynamic tick counts
   [xTickCount, yTickCount] = tickCounts(ADJ_WIDTH, ADJ_HEIGHT);
 
   // update axes
@@ -172,7 +175,7 @@ function updateDimensions() {
 
   positionLabels();
 
-  // Update SVG size
+  // update SVG size
   svg
     .attr("width", ADJ_WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
     .attr("height", ADJ_HEIGHT + MARGIN.TOP + MARGIN.BOTTOM);
@@ -201,7 +204,7 @@ function updateDimensions() {
     simulation.alpha(0.9).restart();
   }
 
-  // Update image positions if necessary
+  // update image positions if necessary
   const image = svg.select(".centered-image");
 
   const x = (ADJ_WIDTH - IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2;
@@ -215,8 +218,8 @@ function updateDimensions() {
 
   svg
     .select(".image-caption")
-    .attr("x", ADJ_WIDTH / 2) // Ensure centered horizontally
-    .attr("y", y + IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR + IMAGE.MARGIN) // Reposition below the image
+    .attr("x", ADJ_WIDTH / 2)
+    .attr("y", y + IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR + IMAGE.MARGIN)
     .selectAll("tspan")
     .attr("x", ADJ_WIDTH / 2);
 
@@ -237,13 +240,13 @@ function updateDimensions() {
   svg.selectAll(".borough-label").each(function (d) {
     const g = d3.select(this);
 
-    // Update text attributes (e.g., font size)
+    // update text attributes (e.g., font size)
     g.select("text.label-text").attr(
       "font-size",
       `${12 * (ADJ_WIDTH / WIDTH)}px`
-    ); // Example scaling
+    );
 
-    // Update rectangle size based on updated text
+    // update rectangle size based on updated text
     const text = g.select("text.label-text");
     const bbox = text.node().getBBox();
 
@@ -261,11 +264,7 @@ function updateDimensions() {
   });
 }
 
-// All the initial elements should be created in the drawInitial function
-// As they are required, their attributes can be modified
-// They can be shown or hidden using their 'opacity' attribute
-// Each element should also have an associated class name for easy reference
-
+// draw each visual initially, then hide most of them
 function drawInitial() {
   const container = document.getElementById("vis");
   const containerWidth = container.clientWidth;
@@ -330,17 +329,16 @@ function drawInitial() {
       .ticks(yTickCount)
   );
 
-  // Instantiate the force simulation
-  simulation = d3.forceSimulation(histDataset);
+  // instantiate the force simulation
+  simulation = d3.forceSimulation(distDataset);
 
-  // Selection of all the circles
-  // Append a div element for the tooltip (hidden by default)
+  // append a div element for the tooltip (hidden by default)
   const tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
-  // Create nodes
+  // create nodes
   nodes = svg
     .selectAll("circle")
-    .data(histDataset)
+    .data(distDataset)
     .enter()
     .append("circle")
     .attr("class", "nodes")
@@ -354,7 +352,7 @@ function drawInitial() {
     .attr("opacity", DOT.OPACITY)
     .on("mouseover", function (event, d) {
       if (d3.select(this).attr("opacity") > 0) {
-        // Show the tooltip
+        // show the tooltip
         tooltip
           .html(
             `<strong>Plate ID:</strong> ${d.plate_id}<br>
@@ -367,29 +365,29 @@ function drawInitial() {
            <strong>Total fines:</strong> $${d.fines.toLocaleString()}
            `
           )
-          .style("left", `${event.pageX + 10}px`) // Position tooltip near the mouse
+          .style("left", `${event.pageX + 10}px`) // position tooltip near the mouse
           .style("top", `${event.pageY + 10}px`)
           .classed("visible", true);
 
-        // Optionally, highlight the node
+        // highlight the node
         d3.select(this).classed("highlighted", true);
       }
     })
     .on("mousemove", function (event) {
-      // Update tooltip position as the mouse moves
+      // update tooltip position as the mouse moves
       tooltip
         .style("left", `${event.pageX + 10}px`)
         .style("top", `${event.pageY + 10}px`);
     })
     .on("mouseout", function () {
-      // Hide the tooltip
+      // hide the tooltip when mouse moves away
       tooltip.classed("visible", false);
 
-      // Remove highlight
+      // remove highlight
       d3.select(this).classed("highlighted", false);
     });
 
-  // Define each tick of simulation
+  // define each tick of simulation
   simulation
     .on("tick", () => {
       nodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
@@ -424,16 +422,16 @@ function drawInitial() {
     .each(function (d) {
       const g = d3.select(this);
 
-      // Append text
+      // append text
       const text = g
         .append("text")
         .text(`${d} (${boroughCategories[d][1]}%)`)
         .attr("class", "label-text");
 
-      // Get the bounding box of the text
+      // get the bounding box of the text
       const bbox = text.node().getBBox();
 
-      // Append rectangle behind the text
+      // append rectangle behind the text
       g.insert("rect", "text")
         .attr("class", "label-rect")
         .attr("x", bbox.x - BOROUGH_TEXT.width_padding)
@@ -445,7 +443,7 @@ function drawInitial() {
   // hide to start
   svg.selectAll("g.borough-labels").style("visibility", "hidden");
 
-  // Append the Mapbox foreignObject, positioned to the right of the dropdown
+  // append the mapbox foreignObject
   svg
     .append("foreignObject")
     .attr("width", ADJ_WIDTH)
@@ -453,9 +451,9 @@ function drawInitial() {
     .attr("x", 0)
     .attr("y", MARGIN.TOP)
     .attr("class", "map-foreignobject")
-    .style("display", "none") // Hidden by default
+    .style("display", "none") // hidden by default
     .append("xhtml:div")
-    .attr("id", "map"); // This div will host the Mapbox map
+    .attr("id", "map"); // this div will host the Mapbox map
 
   mapContainer = d3.select("#map");
 
@@ -466,7 +464,7 @@ function drawInitial() {
 
   const selectWrapper = mapContainer.append("div").attr("id", "select-wrapper");
 
-  // Append a label for the selectButton
+  // append a label for the selectButton
   selectWrapper
     .append("label")
     .attr("for", "selectButton")
@@ -475,13 +473,13 @@ function drawInitial() {
 
     .style("color", "#333");
 
-  // Append the select element to the wrapper
+  // append the select element to the wrapper
   selectButton = selectWrapper
     .append("select")
     .attr("id", "selectButton")
-    .style("width", "200px"); // Adjust width as needed
+    .style("width", "200px");
 
-  // Add options to the selectButton
+  // add options to the selectButton
   selectButton
     .selectAll("option")
     .data(mapPlates)
@@ -493,6 +491,7 @@ function drawInitial() {
   // dropdown will be initialized to first element
   selectedPlateID = mapPlates[0];
 
+  // add image
   const imageX = (ADJ_WIDTH - IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2;
   const imageY = (ADJ_HEIGHT - IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR) / 2;
 
@@ -501,8 +500,8 @@ function drawInitial() {
 
   svg
     .append("image")
-    .attr("class", "centered-image") // Assign a class for easy selection
-    .attr("href", "images/crash-car-1.png") // Path to your PNG image
+    .attr("class", "centered-image")
+    .attr("href", "images/crash-car-1.png")
     .attr("x", imageX)
     .attr("y", imageY)
     .attr("width", IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR)
@@ -512,33 +511,33 @@ function drawInitial() {
   const caption = svg
     .append("text")
     .attr("class", "image-caption")
-    .attr("text-anchor", "middle") // Center the text horizontally
+    .attr("text-anchor", "middle")
     .attr("x", centerX)
     .attr("y", captionY)
-    .attr("opacity", 0); // Start hidden
+    .attr("opacity", 0); // start hidden
 
-  // Append first line of caption
+  // append first line of caption
   caption
     .append("tspan")
-    .attr("x", ADJ_WIDTH / 2) // Ensure centered
-    .attr("dy", "0em") // Align to the initial y
+    .attr("x", ADJ_WIDTH / 2)
+    .attr("dy", "0em")
     .text("Top offender crash in Fort Greene, Brooklyn, in 2021");
 
-  // Append second line of caption
+  // append second line of caption
   caption
     .append("tspan")
-    .attr("x", ADJ_WIDTH / 2) // Ensure centered
-    .attr("dy", "1.2em") // 1.2em below the previous line
+    .attr("x", ADJ_WIDTH / 2)
+    .attr("dy", "1.2em")
     .text("Photo by Liam Quiqley");
 
   // update dimensions on the jump
   updateDimensions();
 
   // Add window resize listener
-
   window.addEventListener("resize", updateDimensions);
 }
 
+// function to display image
 function showImage() {
   const svg = d3.select("#vis").select("svg");
   svg
@@ -567,14 +566,14 @@ function hideMap() {
 }
 
 function regenerateAxes(data, nodes) {
-  // Calculate the maximum values in `limitedData`
+  // calculate the maximum values in `limitedData`
   const minRowPct = d3.min(data, (d) => d.row_pct);
   const minCumShare = d3.min(data, (d) => d.cum_share);
 
   const maxRowPct = Math.ceil(d3.max(data, (d) => d.row_pct) / 5) * 5;
   const maxCumShare = Math.ceil(d3.max(data, (d) => d.cum_share) / 5) * 5;
 
-  // Update scales to reflect the new maximum values
+  // update scales to reflect the new maximum values
   cumXScale.domain([minRowPct, maxRowPct]);
   cumYScale.domain([minCumShare, maxCumShare]);
 
@@ -600,7 +599,8 @@ function regenerateAxes(data, nodes) {
     );
 }
 
-function drawHist(xLower = 0, xHigher = 100) {
+// function to draw cumulative distribution
+function drawCumDist(xLower = 0, xHigher = 100) {
   showingHist = true;
   const svg = d3.select("#vis").select("svg");
 
@@ -612,19 +612,18 @@ function drawHist(xLower = 0, xHigher = 100) {
 
   svg.selectAll(".nodes").style("display", "block");
 
-  // Filter the histDataset to include only a subset of nodes
-  const limitedData = histDataset.filter((d) => {
+  // filter the distDataset to include only a subset of nodes
+  const limitedData = distDataset.filter((d) => {
     return d.row_pct >= xLower && d.row_pct <= xHigher;
   });
 
-  // Regenerate axes based on the limited data
+  // regenerate axes based on the limited data
   regenerateAxes(limitedData);
 
   simulation
     .on("tick", () => {
       nodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
     })
-    // define forces
     .force("forceX", d3.forceX((d) => cumXScale(d.row_pct)).strength(0.075))
     .force("forceY", d3.forceY((d) => cumYScale(d.cum_share)).strength(0.075))
     .force(
@@ -646,7 +645,8 @@ function drawHist(xLower = 0, xHigher = 100) {
     .attr("opacity", (d) => (limitedData.includes(d) ? DOT.OPACITY : 0)); // Semi-transparent for others
 }
 
-function cleanHist(keepNodes = false) {
+// function to clean up cumulative distribution plot
+function cleanCumDist(keepNodes = false) {
   const svg = d3.select("#vis").select("svg");
 
   svg.select(".x-label").style("display", "none");
@@ -660,6 +660,7 @@ function cleanHist(keepNodes = false) {
   }
 }
 
+// draw packs of nodes by borough
 function drawBoroughPacks() {
   // display nodes
   const svg = d3.select("#vis").select("svg");
@@ -691,6 +692,7 @@ function drawBoroughPacks() {
   svg.selectAll("g.borough-labels").style("visibility", "visible");
 }
 
+// clean packs of nodes by borough
 function cleanBoroughPacks(keepNodes = false) {
   const svg = d3.select("#vis").select("svg");
   svg.selectAll("g.borough-labels").style("visibility", "hidden");
@@ -700,22 +702,22 @@ function cleanBoroughPacks(keepNodes = false) {
   }
 }
 
+// draw map
 function drawMapbox() {
-  // Show the foreignObject containing the map
+  // show the foreignObject containing the map
   d3.select(".map-foreignobject").style("display", "block");
-
-  // Ensure the SVG remains visible
+  // ensure the SVG remains visible
   d3.select("svg").style("opacity", 1);
 
   selectButton = d3.select("#map").select("#selectButton");
 
-  // Event listener for selectButton
+  // event listener for selectButton
   selectButton.on("change", function () {
     selectedPlateID = d3.select(this).property("value");
     adjustMapBounds(selectedPlateID);
   });
 
-  // Initialize the Mapbox map
+  // initialize the Mapbox map
   mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
   map = new mapboxgl.Map({
@@ -726,12 +728,12 @@ function drawMapbox() {
     attributionControl: false,
   });
 
-  // Prepare GeoJSON points from mapDataset
+  // prepare GeoJSON points from mapDataset
   const geojson = {
     type: "FeatureCollection",
     features: mapDataset.map((point, index) => ({
       type: "Feature",
-      id: index, // Assign a unique ID using the index
+      id: index,
       geometry: {
         type: "Point",
         coordinates: [point.long, point.lat],
@@ -745,46 +747,47 @@ function drawMapbox() {
           " " +
           point.violation_county,
         plate_id: point.plate_id,
-        issue_dt_ts: point.issue_dt, // Add timestamp for filtering
+        issue_dt_ts: point.issue_dt,
       },
     })),
   };
 
   function adjustMapBounds(selectedPlateID) {
-    // Retrieve the GeoJSON data from the source
+    // retrieve the GeoJSON data from the source
     const sourceData = map.getSource("filtered-points")._data;
 
     const filteredPoints = sourceData.features.filter(
       (feature) => feature.properties.plate_id === selectedPlateID
     );
 
-    // Extract all coordinates of the filtered points
+    // extract all coordinates of the filtered points
     const coordinates = filteredPoints.map(
       (feature) => feature.geometry.coordinates
     );
 
-    // Calculate the bounding box
+    // calculate the bounding box
     const bounds = new mapboxgl.LngLatBounds();
 
     coordinates.forEach((coord) => {
       bounds.extend(coord);
     });
 
-    // Fit the map to the calculated bounds with padding
+    // fit the map to the calculated bounds with padding
     map.fitBounds(bounds, {
-      padding: 100, // Adjust padding as needed
-      duration: 1000, // Duration in milliseconds for the animation
-      essential: true, // This ensures the animation is not affected by user preferences
+      padding: 100,
+      duration: 1000, // duration in milliseconds for the animation
+      essential: true, // ensure animation is not affected by user preferences
     });
 
-    // disable zoom interactions
+    // disable zoom interactions when map first is scrolled upon
+    // if you don't do this, user will accidentally zoom in/out upon map render
     map.scrollZoom.disable();
     map.doubleClickZoom.disable();
     map.boxZoom.disable();
     map.dragRotate.disable();
     map.keyboard.disable();
 
-    // Re-enable zoom interactions after 5 seconds
+    // ee-enable zoom interactions after 5 seconds
     setTimeout(() => {
       map.scrollZoom.enable();
       map.doubleClickZoom.enable();
@@ -796,7 +799,7 @@ function drawMapbox() {
     AnimationController.start();
   }
 
-  // Function to load borough boundaries
+  // function to load borough boundaries
   async function loadBoroughs() {
     const response = await fetch("data/raw/Borough Boundaries.geojson");
     if (!response.ok) {
@@ -806,7 +809,7 @@ function drawMapbox() {
     return data;
   }
 
-  // Function to filter points within boroughs using Turf.js
+  // function to filter points within boroughs using Turf.js
   function filterPointsWithinBoroughs(points, boroughs) {
     const filtered = {
       type: "FeatureCollection",
@@ -814,10 +817,11 @@ function drawMapbox() {
     };
 
     points.features.forEach((point) => {
-      // Check if the point is within any borough
+      // check if the point is within any borough
       const isInside = boroughs.features.some((borough) =>
         turf.booleanPointInPolygon(point, borough)
       );
+      // only keep if inside
       if (isInside) {
         filtered.features.push(point);
       }
@@ -826,16 +830,16 @@ function drawMapbox() {
     return filtered;
   }
 
-  // Animation Controller Object
+  // animation Controller Object
   const AnimationController = (function () {
     let currentIndex = 0;
     let isPaused = false;
     let timeoutId = null;
 
-    // Define speeds
+    // define speeds
     const animationSpeed = 5000; // 5 seconds per plate
 
-    // Function to add a point and update the map
+    // function to add a point and update the map
     function addPoints(currentDate) {
       const formattedDate = currentDate.toISOString().split("T")[0];
 
@@ -845,7 +849,7 @@ function drawMapbox() {
         ["<=", ["get", "issue_dt_ts"], formattedDate],
       ]);
 
-      // Query features that match the current date and selectedPlateID
+      // query features that match the current date and selectedPlateID
       const matchingFeatures = map.querySourceFeatures("filtered-points", {
         filter: [
           "all",
@@ -854,7 +858,7 @@ function drawMapbox() {
         ],
       });
 
-      // Highlight each matching feature
+      // highlight each matching feature
       matchingFeatures.forEach((feature) => {
         map.setFeatureState({ source: "filtered-points" }, { highlight: true });
       });
@@ -862,21 +866,21 @@ function drawMapbox() {
       d3.select("#map").select("#date-display").text(`Date: ${formattedDate}`);
     }
 
-    // Function to iterate through all dates
+    // function to iterate through all dates
     function iterateDates() {
       if (currentIndex >= selectedPlateDates.length) {
-        // Stop the animation when all dates have been processed
+        // stop the animation when all dates have been processed
         return;
       }
 
       const currentDate = selectedPlateDates[currentIndex];
       const formattedDate = currentDate.toISOString().split("T")[0];
 
-      // Add points if any
+      // add points if any
       addPoints(currentDate);
       currentIndex++;
 
-      // Schedule the next iteration
+      // schedule the next iteration
       timeoutId = setTimeout(() => {
         if (!isPaused) {
           iterateDates();
@@ -884,7 +888,6 @@ function drawMapbox() {
       }, animationSpeed / selectedPlateDates.length);
     }
 
-    // Public methods
     return {
       start: function () {
         selectedPlateDates = [
@@ -911,21 +914,21 @@ function drawMapbox() {
     };
   })();
 
-  // Add source and layer for points when the map loads
+  // add source and layer for points when the map loads
   map.on("load", async () => {
-    // Load borough boundaries
+    // load borough boundaries
     const boroughsData = await loadBoroughs();
 
-    // Filter points within boroughs
+    // filter points within boroughs
     const filteredGeojson = filterPointsWithinBoroughs(geojson, boroughsData);
 
-    // Check if there are any points after filtering
+    // check if there are any points after filtering
     if (filteredGeojson.features.length === 0) {
       console.warn("No points found within the five boroughs.");
       return;
     }
 
-    // Add the filtered points as a source
+    // add the filtered points as a source
     map.addSource("filtered-points", {
       type: "geojson",
       data: filteredGeojson,
@@ -939,28 +942,28 @@ function drawMapbox() {
         "circle-radius": [
           "case",
           ["boolean", ["feature-state", "hover"], false],
-          10, // Radius when hovered
-          6, // Normal radius
+          DOT.RADIUS * 1.5, // radius when hovered
+          DOT.RADIUS, // normal radius
         ],
         "circle-color": "rgb(56, 56, 241)",
         "circle-opacity": DOT.OPACITY,
       },
     });
 
-    // Initialize a single popup instance
+    // initialize a single popup instance
     const popup = new mapboxgl.Popup({
       closeButton: false, // Removes the close button
       closeOnClick: false, // Keeps the popup open until mouse leaves
     });
 
-    // Initialize a variable to keep track of the currently hovered feature
+    // initialize a variable to keep track of the currently hovered feature
     let featureId = null;
     // Add event listeners for hover interaction
     map.on("mouseenter", "filtered-points-layer", (e) => {
-      // Change the cursor style to pointer
+      // change the cursor style to pointer
       map.getCanvas().style.cursor = "pointer";
 
-      // Get the feature ID
+      // get the feature ID
       featureId = e.features[0].id;
 
       // set hover state
@@ -969,14 +972,13 @@ function drawMapbox() {
         { hover: true }
       );
 
-      // Get the coordinates of the point
+      // get the coordinates of the point
       const coordinates = e.features[0].geometry.coordinates.slice();
 
-      // Get the properties of the point
+      // get the properties of the point
       const props = e.features[0].properties;
 
-      // Construct the HTML content for the popup
-      // Customize this based on the properties you have
+      // construct the HTML content for the popup
       const popupContent = `
         <div class = "map-popup">
           <strong>Date:</strong> ${new Date(props.date).toDateString()} <br>
@@ -984,18 +986,18 @@ function drawMapbox() {
         </div>
       `;
 
-      // Ensure the popup appears above the point even if the map is moved
+      // ensure the popup appears above the point even if the map is moved
       while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
         coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
       }
 
-      // Set the popup's location and content, then add it to the map
+      // set the popup's location and content, then add it to the map
       popup.setLngLat(coordinates).setHTML(popupContent).addTo(map);
     });
 
     map.on("mouseleave", "filtered-points-layer", () => {
       if (featureId !== null) {
-        // Reset the hover state
+        // reset the hover state
         map.setFeatureState(
           { source: "filtered-points", id: featureId },
           { hover: false }
@@ -1003,9 +1005,9 @@ function drawMapbox() {
       }
       featureId = null;
 
-      // Reset the cursor style
+      // reset the cursor style
       map.getCanvas().style.cursor = "";
-      // Remove the popup
+      // remove the popup
       popup.remove();
     });
 
@@ -1018,37 +1020,40 @@ function drawMapbox() {
     adjustMapBounds(selectedPlateID);
   });
 
-  // Add navigation controls (optional)
+  // add navigation controls
   map.addControl(new mapboxgl.NavigationControl());
 }
 
-// Array of all the graph functions
-// Will be called from the scroller functionality
+// *******************
+// scroll
+// *******************
 
+// array of all visual functions
+// to be called by the scroller functionality
 let activationFunctions = [
   () => {
-    drawHist();
+    drawCumDist();
     hideMap();
   },
   () => {
-    drawHist(50.5, 100);
+    drawCumDist(50.5, 100);
     hideMap();
   },
   () => {
-    drawHist(99, 100);
+    drawCumDist(99, 100);
     hideMap();
     cleanBoroughPacks(true);
   },
   () => {
-    cleanHist(true);
+    cleanCumDist(true);
     hideImage();
     drawBoroughPacks();
   },
   () => {
-    // a bit hacky, but need to include these hist functions to get draw borough packs
+    // a bit hacky, but need to include these cum dist functions to get draw borough packs
     // to behave consistently on up/down scrolls
-    drawHist(99, 100);
-    cleanHist(true);
+    drawCumDist(99, 100);
+    cleanCumDist(true);
     cleanBoroughPacks();
     showImage();
     hideMap();
@@ -1071,7 +1076,6 @@ scroll.on("active", function (index) {
   let scrolledSections = d3.range(lastIndex + sign, activeIndex + sign, sign);
 
   scrolledSections.forEach((i) => {
-    console.log(i);
     activationFunctions[i]();
   });
   lastIndex = activeIndex;
