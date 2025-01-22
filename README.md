@@ -6,9 +6,8 @@ who contribute a significant share of violations despite being relatively small 
 
 This project uses Python for data processing, and D3 and Mapbox for visualization. 
 
-The datasets used in this project are too large to store on GitHub. But you can find the three datasets required for processing and visualization here:
+Some datasets used in this project are too large to store on GitHub. But you can find the raw dataset required for processing and visualization here:
 * [Parking Violations Issued - Fiscal Year 2024](https://data.cityofnewyork.us/City-Government/Parking-Violations-Issued-Fiscal-Year-2024/pvqr-7yc4/about_data)
-* [Parking Violation Codes](https://data.cityofnewyork.us/api/views/pvqr-7yc4/files/7875fa68-3a29-4825-9dfb-63ef30576f9e?download=true&filename=ParkingViolationCodes_January2020.xlsx)
-* [Borough geometry](https://data.cityofnewyork.us/City-Government/Borough-Boundaries/tqmj-j8zm)
 
+You can then run [violations_agg.py](https://github.com/m-cahana/nyc_camera_violations/blob/main/data/python/violations_agg.py) and [violations_analysis.py](https://github.com/m-cahana/nyc_camera_violations/blob/main/data/python/violations_analysis.py) to process it.
 
