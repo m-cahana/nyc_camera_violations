@@ -72,6 +72,11 @@ def stat_report(df, name):
         share of violations: 
         {round(1 - df.cum_share.min(), 2)}
         """)
+    
+    print(f"""
+        school hour rate: 
+        {round(df.school_zone_school_hour_violations.sum() / df.school_zone_violations.sum(), 2)}
+        """)
 
     print(f"""
         minimum violations: 
@@ -95,10 +100,14 @@ violations_agg = pd.read_csv('../processed/parking_violations_agg.csv')
 
 # ---- categorize ----- 
 red_light_agg = generate_shares(violations_agg, 7).rename(
-    columns = {'violations':'red_light_violations'}
+    columns = {
+        'violations':'red_light_violations',
+        'school_hour_violations':'red_light_school_hour_violations'}
 )
 school_zone_agg = generate_shares(violations_agg, 36).rename(
-    columns = {'violations':'school_zone_violations'}
+    columns = {
+        'violations':'school_zone_violations',
+        'school_hour_violations':'school_zone_school_hour_violations'}   
 )
 
 school_zone_agg['school_zone_violations_binned'] = school_zone_agg.school_zone_violations.apply(bin_violations)

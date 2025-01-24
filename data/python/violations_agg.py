@@ -5,7 +5,25 @@ import numpy as np
 # ----- functions -----
 def clean_cols(df):
    df.columns  = [c.lower().replace(' ', '_') for c in df.columns]
+   
    return df 
+
+def clean_times(df):
+    
+    df['violation_time'] = df['violation_time'].str.replace('A', 'AM').str.replace('P', 'PM')
+    
+
+    df['violation_time'] = df['violation_time'].str.replace(r'^00', '12', regex=True)
+
+    df['violation_time'] = pd.to_datetime(df['violation_time'], format='%I%M%p', errors = 'coerce')
+    
+    df['school_hours'] = (
+       (df['violation_time'] >= pd.to_datetime('0730AM', format='%I%M%p')) & 
+       (df['violation_time'] <= pd.to_datetime('0430PM', format='%I%M%p'))
+     )
+    
+    return df 
+
 
 # ----- data read-in -----
 
@@ -24,12 +42,14 @@ for chunk in pd.read_csv('../raw/Parking_Violations_Issued_-_Fiscal_Year_2024_20
     
     # clean up chunk columns and filter out blanks
     chunk = clean_cols(chunk)
+    chunk = clean_times(chunk)
     chunk = chunk[chunk.plate_id != 'BLANKPLATE']
 
     # aggregate
     agg_chunk = chunk.groupby(
         ['plate_id', 'registration_state', 'plate_type', 'violation_code', 'violation_county']).agg( 
-        violations = ('summons_number', 'count')
+        violations = ('summons_number', 'count'),
+        school_hour_violations = ('school_hours', 'sum')
     ).reset_index()
     
     # add to master df
@@ -62,7 +82,8 @@ all_chunks['violation_borough'] = all_chunks.violation_county.apply(map_county_t
 # group things together at the plate/borough level first
 all_chunks = all_chunks.groupby(
     ['plate_id', 'registration_state', 'plate_type', 'violation_code', 'violation_borough']).agg(
-        violations = ('violations', 'sum')
+        violations = ('violations', 'sum'), 
+        school_hour_violations = ('school_hour_violations', 'sum')
 ).reset_index()
 
 # now add in which borough they commit most violations in
@@ -71,7 +92,8 @@ borough_maxes = all_chunks.loc[all_chunks.groupby(
 
 all_chunks_boroughed = all_chunks.groupby(
     ['plate_id', 'registration_state', 'plate_type', 'violation_code']).agg(
-        violations = ('violations', 'sum')
+        violations = ('violations', 'sum'),
+        school_hour_violations = ('school_hour_violations', 'sum')
         ).reset_index().merge(
     borough_maxes, 
     how = 'left', 

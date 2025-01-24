@@ -449,4 +449,8 @@ strong {
   .label-text {
     font-size: 8px;
   }
+  .x-label,
+  .y-label {
+    font-size: 12px;
+  }
 }
