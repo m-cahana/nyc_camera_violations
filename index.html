@@ -21,6 +21,10 @@
       href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&family=Roboto:ital,wdth,wght@0,98.9,100..900;1,98.9,100..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=keyboard_arrow_down"
+    />
   </head>
 
   <body>
@@ -36,7 +40,17 @@
               A Small Group of Drivers Speed Through New York's School Zones
               Unrestrained, Posing Outsized Dangers to Pedestrians
             </div>
-            <div class="subtitle">January 22nd, 2025</div>
+            <div class="subtitle">January 24th, 2025</div>
+
+            <button class="down-arrow" aria-label="Go to next section">
+              <!-- SVG Icon for Downward Arrow -->
+              <span class="material-symbols-outlined">
+                keyboard_arrow_down
+              </span>
+            </button>
+          </section>
+          <section class="step ghost mobile"></section>
+          <section class="step">
             Last fiscal year, around 3 million drivers sped through school zones
             in New York City, committing nearly 8 million violations. Most only
             sped once or twice, but a small group of drivers committed speeding
@@ -221,5 +235,6 @@
     <script src="js/config.js"></script>
     <script type="module" src="js/sections.js"></script>
     <script src="js/dynamic_static.js"></script>
+    <script src="js/down_arrow.js"></script>
   </body>
 </html>

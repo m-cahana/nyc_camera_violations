@@ -82,6 +82,16 @@ def stat_report(df, name):
         minimum violations: 
         {df.school_zone_violations.min()}
         """)
+    
+    print(f"""
+        average violations: 
+        {df.school_zone_violations.mean()}
+        """)
+    
+    print(f"""
+        median violations: 
+        {df.school_zone_violations.median()}
+        """)
 
     print(f"""
         total drivers: 

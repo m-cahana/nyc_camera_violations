@@ -1036,6 +1036,7 @@ let activationFunctions = [
     drawCumDist();
     hideMap();
   },
+  () => {},
   () => {
     drawCumDist(50.5, 100);
     hideMap();
