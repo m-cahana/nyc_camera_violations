@@ -87,6 +87,9 @@ svg {
   position: relative;
   width: 90%;
   scroll-margin-top: 5vh;
+  /* Add this line */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .step:not(.ghost) {
@@ -314,14 +317,14 @@ strong {
 /* large screens */
 @media screen and (min-width: 1100px) {
   .map-foreignobject {
-    transform: translateX(40px); /* shift right */
-    width: calc(100% - 40px); /* reduce width */
+    transform: translateX(90px); /* shift right */
+    width: calc(100% - 90px); /* reduce width */
     box-sizing: border-box;
     z-index: 5;
   }
 
   #map {
-    width: calc(100% - 40px); /* match the reduced width */
+    width: calc(100% - 90px); /* match the reduced width */
     height: 100%; /* maintain full height */
     width: 800px;
     height: 500px;
@@ -393,7 +396,7 @@ strong {
     flex: 1;
     max-width: 400px;
     width: 100%;
-    margin-right: 0px;
+    margin: 0 auto;
   }
 
   #vis-container {
@@ -415,7 +418,8 @@ strong {
     width: 90%; /* adjust width for better fit on small screens */
     max-width: 800px;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translate(-50%, -50%); /* Center horizontally and vertically */
+    left: 50%; /* Position from the center */
   }
 
   #vis svg {

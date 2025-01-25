@@ -13,8 +13,8 @@ let xTickCount, yTickCount;
 let ADJ_WIDTH, ADJ_HEIGHT;
 let showingHist = true;
 
-let CORE_MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
-let MARGIN = { LEFT: 100, RIGHT: 100, TOP: 50, BOTTOM: 20 };
+let CORE_MARGIN = { LEFT: 150, RIGHT: 100, TOP: 50, BOTTOM: 20 };
+let MARGIN = { LEFT: 150, RIGHT: 100, TOP: 50, BOTTOM: 20 };
 let WIDTH = 800;
 let HEIGHT = 500;
 let HEIGHT_WIDTH_RATIO = HEIGHT / WIDTH;
@@ -157,8 +157,6 @@ function updateDimensions() {
     return acc;
   }, {});
 
-  console.log(`update dimensions margin: ${JSON.stringify(MARGIN)}`);
-
   // update scales
   cumXScale.range([MARGIN.LEFT, ADJ_WIDTH - MARGIN.RIGHT]);
   cumYScale.range([ADJ_HEIGHT - MARGIN.BOTTOM, MARGIN.TOP]);
@@ -181,7 +179,6 @@ function updateDimensions() {
       .ticks(yTickCount)
   );
 
-  console.log(Object.keys(yAxis));
   positionLabels();
 
   // update SVG size
@@ -289,8 +286,6 @@ function drawInitial() {
     acc[key] = CORE_MARGIN[key] * DOT_ADJUSTMENT_FACTOR;
     return acc;
   }, {});
-
-  console.log(`draw initial margin: ${JSON.stringify(MARGIN)}`);
 
   // axes
   cumXScale = d3
