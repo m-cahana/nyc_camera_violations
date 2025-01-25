@@ -358,10 +358,13 @@ strong {
     border: none;
     cursor: pointer;
     outline: none;
-    animation: bounce 2s infinite; /* Optional */
     display: inline-flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .down-arrow:hover {
+    animation: bounce 2s infinite; /* apply animation on hover */
   }
 
   .step {
