@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const observerOptions = {
     root: null, // relative to the viewport
     rootMargin: "0px 0px 0px 0px",
-    threshold: 0.1, // trigger when 10% of the observedDiv is visible
+    threshold: 0, // trigger when 10% of the observedDiv is visible
   };
 
   const observerCallback = (entries, observer) => {

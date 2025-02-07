@@ -1,3 +1,5 @@
+"use strict";
+
 export function scroller() {
   let container = d3.select("body");
   let dispatch = d3.dispatch("active", "progress");
