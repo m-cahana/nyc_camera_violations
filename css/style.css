@@ -290,6 +290,16 @@ a[id^="footnotes-ref"] {
   font-size: 0.8em;
 }
 
+.footnote-url {
+  overflow-wrap: break-word;
+  word-wrap: break-word; /* For older browsers */
+  white-space: normal;
+}
+
+.footnote-list {
+  font-size: 0.8em;
+}
+
 .label-rect {
   fill: white;
   stroke: black;
