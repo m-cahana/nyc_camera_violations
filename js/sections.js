@@ -22,6 +22,7 @@ const DOT = { RADIUS: 5, OPACITY: 0.5 };
 const TICKS = { x: 50, y: 50 };
 const BOROUGH_TEXT = { width_padding: 10, height_padding: 10 };
 const IMAGE = { WIDTH: 600, HEIGHT: 400, MARGIN: 15 };
+const IMAGE_2 = { WIDTH: 400, HEIGHT: 600, MARGIN: 15 };
 
 const boroughCategories = {
   Brooklyn: [0.15, 40],
@@ -211,21 +212,32 @@ function updateDimensions() {
   }
 
   // update image positions if necessary
+  const centerX = ADJ_WIDTH / 2;
+  const centerY = ADJ_HEIGHT / 2;
+
+  // Update first image
   const image = svg.select(".centered-image");
-
-  const x = (ADJ_WIDTH - IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2;
-  const y = (ADJ_HEIGHT - IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR) / 2;
-
   image
-    .attr("x", x)
-    .attr("y", y)
+    .attr("x", centerX - (IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2)
+    .attr("y", centerY - (IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR) / 2)
     .attr("width", IMAGE.WIDTH * DOT_ADJUSTMENT_FACTOR)
     .attr("height", IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR);
+
+  // Update second image
+  const image2 = svg.select(".centered-image-2");
+  image2
+    .attr("x", centerX - (IMAGE_2.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2)
+    .attr("y", centerY - (IMAGE_2.HEIGHT * DOT_ADJUSTMENT_FACTOR) / 2)
+    .attr("width", IMAGE_2.WIDTH * DOT_ADJUSTMENT_FACTOR)
+    .attr("height", IMAGE_2.HEIGHT * DOT_ADJUSTMENT_FACTOR);
 
   svg
     .select(".image-caption")
     .attr("x", ADJ_WIDTH / 2)
-    .attr("y", y + IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR + IMAGE.MARGIN)
+    .attr(
+      "y",
+      centerY + (IMAGE.HEIGHT * DOT_ADJUSTMENT_FACTOR) / 2 + IMAGE.MARGIN
+    )
     .selectAll("tspan")
     .attr("x", ADJ_WIDTH / 2);
 
@@ -541,6 +553,20 @@ function drawInitial() {
     .attr("dy", "1.2em")
     .text("Photo by Liam Quiqley");
 
+  // Calculate center position for image
+  const centerX2 = ADJ_WIDTH / 2;
+  const centerY2 = ADJ_HEIGHT / 2;
+
+  svg
+    .append("image")
+    .attr("class", "centered-image-2")
+    .attr("href", "images/dvap.png")
+    .attr("x", centerX2 - (IMAGE_2.WIDTH * DOT_ADJUSTMENT_FACTOR) / 2) // Center horizontally
+    .attr("y", centerY2 - (IMAGE_2.HEIGHT * DOT_ADJUSTMENT_FACTOR) / 2) // Center vertically
+    .attr("width", IMAGE_2.WIDTH * DOT_ADJUSTMENT_FACTOR)
+    .attr("height", IMAGE_2.HEIGHT * DOT_ADJUSTMENT_FACTOR)
+    .attr("opacity", 0);
+
   // update dimensions on the jump
   updateDimensions();
 
@@ -549,27 +575,20 @@ function drawInitial() {
 }
 
 // function to display image
-function showImage() {
+function showImage(image_class, caption_class) {
+  console.log(image_class, caption_class);
   const svg = d3.select("#vis").select("svg");
-  svg
-    .selectAll(".centered-image")
-    .transition()
-    .duration(250)
-    .attr("opacity", 1);
+  svg.selectAll(image_class).transition().duration(250).attr("opacity", 1);
 
-  svg.select(".image-caption").transition().duration(500).attr("opacity", 1);
+  svg.select(caption_class).transition().duration(500).attr("opacity", 1);
 }
 
 // Function to hide and reset the image group
-function hideImage() {
+function hideImage(image_class, caption_class) {
   const svg = d3.select("#vis").select("svg");
-  svg
-    .selectAll(".centered-image")
-    .transition()
-    .duration(250)
-    .attr("opacity", 0);
+  svg.selectAll(image_class).transition().duration(250).attr("opacity", 0);
 
-  svg.select(".image-caption").transition().duration(500).attr("opacity", 0);
+  svg.select(caption_class).transition().duration(500).attr("opacity", 0);
 }
 
 function hideMap() {
@@ -1059,7 +1078,8 @@ let activationFunctions = [
   },
   () => {
     cleanCumDist(true);
-    hideImage();
+    hideImage(".centered-image-2", ".image-caption-2");
+    hideImage(".centered-image", ".image-caption");
     drawBoroughPacks();
   },
   () => {
@@ -1068,12 +1088,18 @@ let activationFunctions = [
     drawCumDist(99, 100);
     cleanCumDist(true);
     cleanBoroughPacks();
-    showImage();
+    showImage(".centered-image-2", ".image-caption-2");
+    hideImage(".centered-image", ".image-caption");
+  },
+  () => {
+    hideImage(".centered-image-2", ".image-caption-2");
+    showImage(".centered-image", ".image-caption");
     hideMap();
   },
   () => {
     drawMapbox();
-    hideImage();
+    hideImage(".centered-image-2", ".image-caption-2");
+    hideImage(".centered-image", ".image-caption");
   },
 ];
 

@@ -19,13 +19,13 @@ body {
   font-weight: 300;
   font-size: 14px;
   overflow-x: hidden;
+  counter-reset: footnotes;
 }
 
 #footer {
   border-top: solid;
   padding-right: 50px;
   padding-left: 50px;
-  counter-reset: footnotes;
   margin: 0 auto 0 auto;
   position: relative;
 }
