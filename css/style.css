@@ -14,7 +14,7 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: #fafafa;
   font-family: "Helvetica";
   font-weight: 300;
   font-size: 16px;
@@ -73,21 +73,22 @@ svg {
   line-height: 1.6em;
   text-align: left;
   max-width: 700px;
-  z-index: 101;
+  z-index: 1;
   position: relative;
   width: 90%;
   scroll-margin-top: 5vh;
-  /* Add this line */
   margin-left: auto;
   margin-right: auto;
+  pointer-events: none;
 }
 
 .step:not(.ghost) {
-  min-height: auto; /* allows height to adjust based on content */
+  min-height: auto;
+  pointer-events: auto;
 }
 
 .step.z {
-  z-index: 1000;
+  z-index: 1;
 }
 
 .step.ghost {
@@ -95,6 +96,7 @@ svg {
   background-color: #ffffff;
   opacity: 0;
   z-index: -1;
+  pointer-events: none;
 }
 
 .step.ghost.mobile {
@@ -111,9 +113,9 @@ svg {
   border: 0.5px solid black;
   padding: 5px;
   pointer-events: all;
-  opacity: 0; /* hidden by default */
-  transition: opacity 0.3s ease; /* smooth fade-in and fade-out */
-  z-index: 99; /* ensure tooltip appears above other elements */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
   font-size: 12px;
 }
 
@@ -127,8 +129,8 @@ svg {
   left: 0;
   width: 800px;
   height: 500px;
-  display: none; /* hidden by default */
-  z-index: 11; /* above SVG */
+  display: none;
+  z-index: 11;
 }
 
 #map {
@@ -140,7 +142,6 @@ svg circle:hover {
   cursor: pointer;
 }
 
-/* class to hide elements */
 .hidden {
   display: none;
 }
@@ -163,7 +164,7 @@ strong {
   font-size: 14px;
   color: #333;
   pointer-events: none;
-  z-index: 10; /* ensure it appears above the map */
+  z-index: 10;
 }
 
 #select-wrapper {
@@ -250,6 +251,8 @@ strong {
   stroke: none;
   fill: var(--primary-blue);
   transition: stroke 0.1s ease, stroke-width 0.1s ease;
+  pointer-events: all;
+  z-index: 2;
 }
 
 .nodes.highlighted {
@@ -293,7 +296,7 @@ a[id^="footnotes-ref"] {
 
 .footnote-url {
   overflow-wrap: break-word;
-  word-wrap: break-word; /* For older browsers */
+  word-wrap: break-word;
   white-space: normal;
 }
 
@@ -324,18 +327,17 @@ a[id^="footnotes-ref"] {
   fill: black;
 }
 
-/* large screens */
 @media screen and (min-width: 1100px) {
   .map-foreignobject {
-    transform: translateX(90px); /* shift right */
-    width: calc(100% - 90px); /* reduce width */
+    transform: translateX(90px);
+    width: calc(100% - 90px);
     box-sizing: border-box;
     z-index: 5;
   }
 
   #map {
-    width: calc(100% - 90px); /* match the reduced width */
-    height: 100%; /* maintain full height */
+    width: calc(100% - 90px);
+    height: 100%;
     width: 800px;
     height: 500px;
   }
@@ -350,9 +352,9 @@ a[id^="footnotes-ref"] {
     flex: 2;
     margin-left: 200px;
     top: 0px;
+    pointer-events: none;
   }
 
-  /* static class */
   #vis.static {
     position: absolute;
     top: auto;
@@ -380,10 +382,7 @@ a[id^="footnotes-ref"] {
   }
 }
 
-/* smaller screens */
 @media screen and (max-width: 1099px) {
-  /* display down arrow */
-
   .down-arrow {
     margin-top: 10px;
     background: none;
@@ -396,19 +395,20 @@ a[id^="footnotes-ref"] {
   }
 
   .down-arrow:hover {
-    animation: bounce 2s infinite; /* apply animation on hover */
+    animation: bounce 2s infinite;
   }
 
   .step {
-    width: 90%; /* slightly less than 100% for margins */
-    max-width: 700px; /* maintain a max-width for better readability */
+    width: 90%;
+    max-width: 700px;
     margin-top: 5vh;
-    text-align: center; /* center the text content */
+    text-align: center;
     border-width: 1px;
     border-style: solid;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: #f5f5f5;
     border-radius: 0px;
     padding: 20px;
+    z-index: 1000;
   }
 
   .step.ghost.mobile {
@@ -417,7 +417,7 @@ a[id^="footnotes-ref"] {
 
   #graphic {
     display: flex;
-    flex-direction: column; /* side by side on large screens */
+    flex-direction: column;
     align-items: center;
   }
 
@@ -429,13 +429,13 @@ a[id^="footnotes-ref"] {
   }
 
   #vis-container {
-    display: flex; /* ensure it's a flex container */
-    align-items: center; /* vertical centering */
-    justify-content: center; /* horizontal centering */
-    width: 100%; /* full width */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
     max-width: 800px;
-    margin: 0 auto; /* center the container horizontally */
-    padding: 0; /* remove any padding */
+    margin: 0 auto;
+    padding: 0;
     min-height: 93vh;
     position: relative;
     z-index: 10;
@@ -454,9 +454,9 @@ a[id^="footnotes-ref"] {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    pointer-events: none;
   }
 
-  /* Override for static state to preserve centering */
   #vis.static {
     position: absolute;
     margin-left: 0px;
@@ -469,6 +469,7 @@ a[id^="footnotes-ref"] {
   #vis svg {
     width: 100%;
     margin: 0 auto;
+    pointer-events: all;
   }
 
   #map-container {
@@ -486,7 +487,6 @@ a[id^="footnotes-ref"] {
   }
 }
 
-/* even smaller screens */
 @media screen and (max-width: 800px) {
   #sections {
     flex: 1;
@@ -517,7 +517,6 @@ a[id^="footnotes-ref"] {
   }
 }
 
-/* even smaller  */
 @media screen and (max-width: 600px) {
   #sections {
     flex: 1;
@@ -531,7 +530,6 @@ a[id^="footnotes-ref"] {
   }
 }
 
-/* even smaller  */
 @media screen and (max-width: 500px) {
   .label-text {
     font-size: 8px;
